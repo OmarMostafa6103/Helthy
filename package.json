@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://OmarMostafa6103.github.io/luna-frontend/",
+  "homepage": "https://omarmostafa6103.github.io/Helthy/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
