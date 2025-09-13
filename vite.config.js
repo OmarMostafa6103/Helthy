@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react";
 // set base to '/luna-frontend/'. Adjust if you deploy under a different path.
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/luna-frontend/',
+  base: "/luna-frontend/",
   plugins: [react()],
   server: { port: 5174 },
 });
