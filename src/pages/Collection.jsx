@@ -1,11 +1,10 @@
-import React, { useContext, useState, useMemo, useEffect, useRef } from "react";
-import { ShopContext } from "../context/ShopContext";
+import { useContext, useState, useMemo, useEffect, useRef } from "react";
+import { ShopContext } from "../context/ShopContextCore";
 import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
 import { assets } from "../assets/assets";
 import axios from "axios";
-import { backendUrl } from "../App";
-import { FaChevronDown } from 'react-icons/fa';
+import { backendUrl } from "../config";
 
 const Collection = () => {
   const {
@@ -13,30 +12,24 @@ const Collection = () => {
     search,
     showSearch,
     fetchProducts,
-    currentPage,
-    lastPage,
-    setLastPage,
     isLoadingProducts,
-    setIsLoadingProducts,
-    nextPageUrl,
     setProducts,
   } = useContext(ShopContext);
 
   const [showFilter, setShowFilter] = useState(false);
   const [category, setCategory] = useState([]);
-  const [subCategory, setSubCategory] = useState([]);
+  const [subCategory] = useState([]); // setter intentionally omitted
   const [sortType, setSortType] = useState("relevant");
   const [categories, setCategories] = useState([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [error, setError] = useState(null);
-  const [categoryError, setCategoryError] = useState(null);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [, setCategoryError] = useState(null); // state value intentionally ignored
   const hasFetchedCategories = useRef(false);
   const productGridRef = useRef(null);
-  const hasMore = useRef(true);
-  const isFetching = useRef(false);
   const [expandedParents, setExpandedParents] = useState([]);
 
-  // تحميل الفئات
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       if (hasFetchedCategories.current) return;
@@ -68,10 +61,10 @@ const Collection = () => {
           console.log("Setting categories:", data);
           setCategories(data);
         }
-      } catch (error) {
+      } catch (err) {
         setError("فشل في تحميل الفئات. يرجى المحاولة لاحقًا.");
         setCategories([]);
-        console.error("Error fetching categories:", error);
+        console.error("Error fetching categories:", err);
       } finally {
         setIsLoadingCategories(false);
       }
@@ -80,119 +73,89 @@ const Collection = () => {
     fetchCategories();
   }, []);
 
-  // تحميل المنتجات
+  // Load products
   useEffect(() => {
-    if (!isLoadingProducts && products.length === 0) {
-      fetchProducts(1, 25, false);
-    }
-  }, []);
+    let mounted = true;
+    const load = async () => {
+      if (!mounted) return;
+      if (!isLoadingProducts && products.length === 0) {
+        try {
+          setLocalLoading(true);
+          await fetchProducts(1, 25, false);
+        } catch (err) {
+          console.error("Collection initial fetch failed:", err);
+        } finally {
+          if (mounted) setLocalLoading(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+    // fetchProducts is stable via useCallback in context
+  }, [isLoadingProducts, products.length, fetchProducts]);
 
-  const fetchAllCategoryProducts = async (categoryId) => {
-    let page = 1;
-    let allProducts = [];
-    let hasMore = true;
-    setIsLoadingProducts(true);
+  // _fetchAllCategoryProducts removed (unused) to satisfy linter
 
-    while (hasMore) {
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!mounted) return;
+      setProducts([]);
+      setCategoryError(null);
       try {
-        const token = localStorage.getItem("token");
-        let url = `${backendUrl}/api/products?page=${page}&limit=25&category_id=${categoryId}`;
-        const response = await axios.get(url, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-
-        if (response.data.status !== 200) break;
-
-        const rawData = response.data.data || {};
-        const data = rawData.products || [];
-        const pagination = rawData.Pagination || {};
-
-        allProducts = [
-          ...allProducts,
-          ...data.map((product) => ({
-            _id: product.product_slugs || product.id || "",
-            product_id: product.product_id || "",
-            name: product.product_name || "منتج غير مسمى",
-            description: product.product_description || "",
-            image: [
-              product.product_image,
-              product.product_image1,
-              product.product_image2,
-              product.product_image3,
-            ].filter((img) => img),
-            price: parseFloat(product.product_price || product.price) || 0,
-            quantity: parseInt(product.product_quantity) || 0,
-            category: product.category?.category_name || "غير معروف",
-            category_id:
-              product.category?.categor_id ||
-              product.category?.category_id ||
-              product.category_id ||
-              null,
-          })),
-        ];
-
-        if (page >= (pagination.last_page || 1) || data.length === 0) {
-          hasMore = false;
+        setLocalLoading(true);
+        if (category.length > 0) {
+          // pass category as fifth param (categoryId)
+          await fetchProducts(1, 25, false, null, category.join(","));
         } else {
-          page++;
+          await fetchProducts(1, 25, false);
         }
       } catch (err) {
-        hasMore = false;
+        console.error("Collection category fetch failed:", err);
+      } finally {
+        if (mounted) setLocalLoading(false);
       }
-    }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [category, fetchProducts, setProducts]);
 
-    setProducts(allProducts);
-    setIsLoadingProducts(false);
-  };
-
-  useEffect(() => {
-    setProducts([]);
-    if (category.length > 0) {
-      fetchProducts(1, 25, false, null, null, category.join(","));
-    } else {
-      fetchProducts(1, 25, false);
-    }
-    setCategoryError(null);
-  }, [category]);
-
-  // أضف دالة لجلب كل الأبناء لفئة معينة
+  // Get child category ids
   const getAllChildCategoryIds = (parentId) => {
-    return categories.filter(
-      (cat) => cat.parent && (cat.parent.id === parentId || cat.parent.category_id === parentId)
-    ).map((cat) => cat.category_id);
+    return categories
+      .filter(
+        (cat) =>
+          cat.parent &&
+          (cat.parent.id === parentId || cat.parent.category_id === parentId)
+      )
+      .map((cat) => cat.category_id);
   };
 
-  // عدل toggleCategory ليشمل الأبناء عند اختيار الأب
+  // Toggle category (include children when parent selected)
   const toggleCategory = (categoryId) => {
-    const isParent = !categories.find(cat => cat.category_id === categoryId)?.parent;
+    const isParent = !categories.find((cat) => cat.category_id === categoryId)
+      ?.parent;
     let idsToToggle = [categoryId];
     if (isParent) {
       idsToToggle = [categoryId, ...getAllChildCategoryIds(categoryId)];
     }
     setCategory((prev) => {
       const newSet = new Set(prev);
-      let allSelected = idsToToggle.every(id => newSet.has(id));
+      let allSelected = idsToToggle.every((id) => newSet.has(id));
       if (allSelected) {
-        idsToToggle.forEach(id => newSet.delete(id));
+        idsToToggle.forEach((id) => newSet.delete(id));
       } else {
-        idsToToggle.forEach(id => newSet.add(id));
+        idsToToggle.forEach((id) => newSet.add(id));
       }
       return Array.from(newSet);
     });
   };
 
-  const handleLoadMore = async () => {
-    if (!nextPageUrl || isLoadingProducts || isFetching.current) return;
-    isFetching.current = true;
-    try {
-      await fetchProducts(null, 25, true, null, nextPageUrl, category.join(",") || null);
-      hasMore.current = currentPage < lastPage;
-    } catch (err) {
-      hasMore.current = false;
-    } finally {
-      isFetching.current = false;
-    }
-  };
+  // _handleLoadMore removed (unused) to satisfy linter
 
   const categoryProductCounts = useMemo(() => {
     const counts = {};
@@ -205,11 +168,7 @@ const Collection = () => {
     return counts;
   }, [products]);
 
-  const filteredCategories = useMemo(() => {
-    return Array.isArray(categories)
-      ? categories.filter((cat) => categoryProductCounts[cat.category_id] > 0)
-      : [];
-  }, [categories, categoryProductCounts]);
+  // _filteredCategories removed (unused) to satisfy linter
 
   const filteredAndSortedProducts = useMemo(() => {
     let productsCopy = [...products];
@@ -259,7 +218,11 @@ const Collection = () => {
           className="my-2 text-xl flex items-center cursor-pointer gap-2"
         >
           فلاتر
-          <FaChevronDown className={`h-3 md:hidden ${showFilter ? "rotate-90" : ""} text-gray-700 dark:text-white`} aria-hidden />
+          <img
+            src={assets.dropdown_icon}
+            alt=""
+            className={`h-3 md:hidden ${showFilter ? "rotate-90" : ""}`}
+          />
         </p>
 
         <div
@@ -278,11 +241,15 @@ const Collection = () => {
           ) : (
             <div className="flex flex-col gap-2 text-sm font-light">
               {categories
-                .filter(cat => !cat.parent) // فقط الآباء
-                .map(parent => (
+                .filter((cat) => !cat.parent) // فقط الآباء
+                .map((parent) => (
                   <div key={parent.category_id} className="mb-2">
                     <div
-                      className={`flex items-center gap-2 cursor-pointer ${category.includes(parent.category_id) ? "bg-green-100 font-bold" : "font-bold"}`}
+                      className={`flex items-center gap-2 cursor-pointer ${
+                        category.includes(parent.category_id)
+                          ? "bg-green-100 font-bold"
+                          : "font-bold"
+                      }`}
                       onClick={() => toggleExpand(parent.category_id)}
                     >
                       <input
@@ -290,7 +257,7 @@ const Collection = () => {
                         className="w-4 h-4 accent-green-600"
                         checked={category.includes(parent.category_id)}
                         onChange={() => toggleCategory(parent.category_id)}
-                        onClick={e => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <span>
                         {parent.category_name}
@@ -298,25 +265,42 @@ const Collection = () => {
                           ({categoryProductCounts[parent.category_id] || 0})
                         </span>
                       </span>
-                      <span className="ml-auto">{expandedParents.includes(parent.category_id) ? "▲" : "▼"}</span>
+                      <span className="ml-auto">
+                        {expandedParents.includes(parent.category_id)
+                          ? "▲"
+                          : "▼"}
+                      </span>
                     </div>
                     {/* قائمة الأبناء */}
                     {expandedParents.includes(parent.category_id) && (
                       <div className="pl-6 mt-1 flex flex-col gap-1">
                         {categories
-                          .filter(cat => cat.parent && (cat.parent.id === parent.category_id || cat.parent.category_id === parent.category_id))
-                          .map(child => (
-                            <label key={child.category_id} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          .filter(
+                            (cat) =>
+                              cat.parent &&
+                              (cat.parent.id === parent.category_id ||
+                                cat.parent.category_id === parent.category_id)
+                          )
+                          .map((child) => (
+                            <label
+                              key={child.category_id}
+                              className="flex items-center gap-2 text-gray-700 dark:text-gray-300"
+                            >
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 accent-green-600"
                                 checked={category.includes(child.category_id)}
-                                onChange={() => toggleCategory(child.category_id)}
+                                onChange={() =>
+                                  toggleCategory(child.category_id)
+                                }
                               />
                               <span>
                                 {child.category_name}
                                 <span className="ml-2 text-xs text-gray-500">
-                                  ({categoryProductCounts[child.category_id] || 0})
+                                  (
+                                  {categoryProductCounts[child.category_id] ||
+                                    0}
+                                  )
                                 </span>
                               </span>
                             </label>
@@ -346,7 +330,7 @@ const Collection = () => {
         </div>
 
         {/* حالة التحميل */}
-        {products.length === 0 && isLoadingProducts ? (
+        {products.length === 0 && (isLoadingProducts || localLoading) ? (
           <p className="text-center text-gray-500 text-lg py-10 animate-pulse">
             جارٍ تحميل المنتجات...
           </p>
@@ -370,7 +354,9 @@ const Collection = () => {
             {/* مؤشر تحميل صغير أسفل القائمة عند تحميل المزيد */}
             {isLoadingProducts && products.length > 0 && (
               <div className="text-center py-4">
-                <span className="text-gray-500 animate-pulse">جارٍ تحميل المزيد...</span>
+                <span className="text-gray-500 animate-pulse">
+                  جارٍ تحميل المزيد...
+                </span>
               </div>
             )}
           </>

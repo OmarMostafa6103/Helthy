@@ -1,4 +1,4 @@
-import React from "react";
+// React import not needed with the new JSX transform
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";

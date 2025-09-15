@@ -1,30 +1,30 @@
 //? ========= START API ===========
 //? ========= START API ===========
 
-import React, { useState } from 'react';
-import { ShopContext } from '../context/ShopContext';
-import { useContext } from 'react';
-import { toast } from 'react-toastify';
-import axios from 'axios';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import { backendUrl } from '../App';
+import { useState } from "react";
+import { ShopContext } from "../context/ShopContextCore";
+import { useContext } from "react";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { backendUrl } from "../config";
 
 const Login = () => {
   const { navigate, login } = useContext(ShopContext);
 
   const [currentState, setCurrentState] = useState("تسجيل الدخول");
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
-  const [phone, setPhone] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [phone, setPhone] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordStep, setForgotPasswordStep] = useState('email');
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
-  const [resetCode, setResetCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [newPasswordConfirmation, setNewPasswordConfirmation] = useState('');
+  const [forgotPasswordStep, setForgotPasswordStep] = useState("email");
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirmation, setNewPasswordConfirmation] = useState("");
 
   // التحقق من صحة كلمة المرور
   const validatePassword = (password) => {
@@ -34,31 +34,38 @@ const Login = () => {
   // تبديل حالة النموذج بين تسجيل الدخول وإنشاء حساب
   const handleStateToggle = (newState) => {
     setCurrentState(newState);
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    setPassword('');
-    setPasswordConfirmation('');
-    setPhone('');
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setPassword("");
+    setPasswordConfirmation("");
+    setPhone("");
   };
 
   // إرسال نموذج تسجيل الدخول أو إنشاء حساب
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
-    if (currentState === 'إنشاء حساب') {
-      if (!firstName || !lastName || !email || !password || !passwordConfirmation || !phone) {
-        toast.error('يرجى ملء جميع الحقول');
+    if (currentState === "إنشاء حساب") {
+      if (
+        !firstName ||
+        !lastName ||
+        !email ||
+        !password ||
+        !passwordConfirmation ||
+        !phone
+      ) {
+        toast.error("يرجى ملء جميع الحقول");
         return;
       }
 
       if (!validatePassword(password)) {
-        toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
         return;
       }
 
       if (password !== passwordConfirmation) {
-        toast.error('كلمات المرور غير متطابقة');
+        toast.error("كلمات المرور غير متطابقة");
         return;
       }
 
@@ -72,50 +79,59 @@ const Login = () => {
           phone,
         });
 
-        if (response.data.message?.includes('Register Successfully')) {
-          toast.success('تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني وتسجيل الدخول.', {
-            style: { background: 'green', color: 'white' },
-          });
-          handleStateToggle('تسجيل الدخول');
+        if (response.data.message?.includes("Register Successfully")) {
+          toast.success(
+            "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني وتسجيل الدخول.",
+            {
+              style: { background: "green", color: "white" },
+            }
+          );
+          handleStateToggle("تسجيل الدخول");
         } else {
-          toast.error(response.data.message || 'فشل التسجيل');
+          toast.error(response.data.message || "فشل التسجيل");
         }
       } catch (error) {
-        toast.error(error.response?.data?.message || 'فشل التسجيل');
+        toast.error(error.response?.data?.message || "فشل التسجيل");
       }
-    } else if (currentState === 'تسجيل الدخول') {
+    } else if (currentState === "تسجيل الدخول") {
       try {
         const formData = new FormData();
-        formData.append('email', email);
-        formData.append('password', password);
+        formData.append("email", email);
+        formData.append("password", password);
         const response = await axios.post(`${backendUrl}/api/login`, formData);
 
-        if (response.data.data?.token || response.data.message === 'login success') {
+        if (
+          response.data.data?.token ||
+          response.data.message === "login success"
+        ) {
           const token = response.data.data?.token;
           const user = {
             firstName: response.data.data?.first_name,
             lastName: response.data.data?.last_name,
             email: email,
-            redirect: response.data.data?.redirect || 'dashboard/user',
+            redirect: response.data.data?.redirect || "dashboard/user",
           };
           login(user, token);
-          localStorage.setItem('token', token);
-          toast.success('تم تسجيل الدخول بنجاح!', {
-            style: { background: 'green', color: 'white' },
+          localStorage.setItem("token", token);
+          toast.success("تم تسجيل الدخول بنجاح!", {
+            style: { background: "green", color: "white" },
           });
 
           setTimeout(() => {
-            if (user.redirect === 'dashboard/admin') {
-              navigate('/add');
+            if (user.redirect === "dashboard/admin") {
+              navigate("/add");
             } else {
-              navigate('/');
+              navigate("/");
             }
           }, 500);
         } else {
-          toast.error(response.data.message || 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
+          toast.error(
+            response.data.message ||
+              "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+          );
         }
       } catch (error) {
-        toast.error(error.response?.data?.message || 'فشل تسجيل الدخول');
+        toast.error(error.response?.data?.message || "فشل تسجيل الدخول");
       }
     }
   };
@@ -128,44 +144,47 @@ const Login = () => {
         `${backendUrl}/api/login/google/callback?access_token=${accessToken}`
       );
 
-      if (response.data.data?.token || response.data.message === 'login success') {
+      if (
+        response.data.data?.token ||
+        response.data.message === "login success"
+      ) {
         const token = response.data.data?.token;
         const user = {
           firstName: response.data.data?.first_name,
           lastName: response.data.data?.last_name,
           email: response.data.data?.email || email,
-          redirect: response.data.data?.redirect || 'dashboard/user',
+          redirect: response.data.data?.redirect || "dashboard/user",
         };
         login(user, token);
-        localStorage.setItem('token', token);
-        toast.success('تم تسجيل الدخول بجوجل بنجاح!', {
-          style: { background: 'green', color: 'white' },
+        localStorage.setItem("token", token);
+        toast.success("تم تسجيل الدخول بجوجل بنجاح!", {
+          style: { background: "green", color: "white" },
         });
 
         setTimeout(() => {
-          if (user.redirect === 'dashboard/admin') {
-            navigate('/add');
+          if (user.redirect === "dashboard/admin") {
+            navigate("/add");
           } else {
-            navigate('/');
+            navigate("/");
           }
         }, 500);
       } else {
-        toast.error(response.data.message || 'فشل تسجيل الدخول بجوجل');
+        toast.error(response.data.message || "فشل تسجيل الدخول بجوجل");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'فشل تسجيل الدخول بجوجل');
+      toast.error(error.response?.data?.message || "فشل تسجيل الدخول بجوجل");
     }
   };
 
   // معالجة فشل تسجيل الدخول بجوجل
   const handleGoogleLoginFailure = () => {
-    toast.error('فشل تسجيل الدخول بجوجل');
+    toast.error("فشل تسجيل الدخول بجوجل");
   };
 
   // إرسال رمز إعادة تعيين كلمة المرور
   const handleForgotPasswordEmail = async () => {
     if (!forgotPasswordEmail) {
-      toast.error('يرجى إدخال بريدك الإلكتروني');
+      toast.error("يرجى إدخال بريدك الإلكتروني");
       return;
     }
 
@@ -174,43 +193,48 @@ const Login = () => {
         email: forgotPasswordEmail,
       });
 
-      if (response.data.status === 200 && response.data.message === 'Reset code sent successfully') {
-        toast.success('تم إرسال رمز إعادة التعيين إلى بريدك الإلكتروني!', {
-          style: { background: 'green', color: 'white' },
+      if (
+        response.data.status === 200 &&
+        response.data.message === "Reset code sent successfully"
+      ) {
+        toast.success("تم إرسال رمز إعادة التعيين إلى بريدك الإلكتروني!", {
+          style: { background: "green", color: "white" },
         });
-        setForgotPasswordStep('code');
+        setForgotPasswordStep("code");
       } else {
-        toast.error(response.data.message || 'فشل إرسال رمز إعادة التعيين');
+        toast.error(response.data.message || "فشل إرسال رمز إعادة التعيين");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'فشل إرسال رمز إعادة التعيين');
+      toast.error(
+        error.response?.data?.message || "فشل إرسال رمز إعادة التعيين"
+      );
     }
   };
 
   // التحقق من رمز إعادة التعيين
   const handleVerifyResetCode = async () => {
     if (!resetCode) {
-      toast.error('يرجى إدخال رمز إعادة التعيين');
+      toast.error("يرجى إدخال رمز إعادة التعيين");
       return;
     }
 
-    setForgotPasswordStep('newPassword');
+    setForgotPasswordStep("newPassword");
   };
 
   // إعادة تعيين كلمة المرور
   const handleResetPassword = async () => {
     if (!newPassword || !newPasswordConfirmation) {
-      toast.error('يرجى إدخال كلمة المرور الجديدة وتأكيدها');
+      toast.error("يرجى إدخال كلمة المرور الجديدة وتأكيدها");
       return;
     }
 
     if (!validatePassword(newPassword)) {
-      toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
       return;
     }
 
     if (newPassword !== newPasswordConfirmation) {
-      toast.error('كلمات المرور غير متطابقة');
+      toast.error("كلمات المرور غير متطابقة");
       return;
     }
 
@@ -222,10 +246,13 @@ const Login = () => {
         password_confirmation: newPasswordConfirmation,
       });
 
-      if (response.data.message?.includes('Password reset successfully')) {
-        toast.success('تم إعادة تعيين كلمة المرور بنجاح! جاري تسجيل الدخول...', {
-          style: { background: 'green', color: 'white' },
-        });
+      if (response.data.message?.includes("Password reset successfully")) {
+        toast.success(
+          "تم إعادة تعيين كلمة المرور بنجاح! جاري تسجيل الدخول...",
+          {
+            style: { background: "green", color: "white" },
+          }
+        );
 
         try {
           const loginResponse = await axios.post(`${backendUrl}/api/login`, {
@@ -233,57 +260,66 @@ const Login = () => {
             password: newPassword,
           });
 
-          if (loginResponse.data.data?.token || loginResponse.data.message === 'login success') {
+          if (
+            loginResponse.data.data?.token ||
+            loginResponse.data.message === "login success"
+          ) {
             const token = loginResponse.data.data?.token;
             const user = {
               firstName: loginResponse.data.data?.first_name,
               lastName: loginResponse.data.data?.last_name,
               email: forgotPasswordEmail,
-              redirect: loginResponse.data.data?.redirect || 'dashboard/user',
+              redirect: loginResponse.data.data?.redirect || "dashboard/user",
             };
             login(user, token);
-            localStorage.setItem('token', token);
-            toast.success('تم تسجيل الدخول بنجاح!', {
-              style: { background: 'green', color: 'white' },
+            localStorage.setItem("token", token);
+            toast.success("تم تسجيل الدخول بنجاح!", {
+              style: { background: "green", color: "white" },
             });
 
             setShowForgotPassword(false);
-            setForgotPasswordEmail('');
-            setResetCode('');
-            setNewPassword('');
-            setNewPasswordConfirmation('');
-            setForgotPasswordStep('email');
+            setForgotPasswordEmail("");
+            setResetCode("");
+            setNewPassword("");
+            setNewPasswordConfirmation("");
+            setForgotPasswordStep("email");
 
             setTimeout(() => {
-              if (user.redirect === 'dashboard/admin') {
-                navigate('/add');
+              if (user.redirect === "dashboard/admin") {
+                navigate("/add");
               } else {
-                navigate('/');
+                navigate("/");
               }
             }, 500);
           } else {
-            toast.error(loginResponse.data.message || 'فشل تسجيل الدخول التلقائي');
+            toast.error(
+              loginResponse.data.message || "فشل تسجيل الدخول التلقائي"
+            );
             setShowForgotPassword(false);
-            setForgotPasswordEmail('');
-            setResetCode('');
-            setNewPassword('');
-            setNewPasswordConfirmation('');
-            setForgotPasswordStep('email');
+            setForgotPasswordEmail("");
+            setResetCode("");
+            setNewPassword("");
+            setNewPasswordConfirmation("");
+            setForgotPasswordStep("email");
           }
         } catch (loginError) {
-          toast.error(loginError.response?.data?.message || 'فشل تسجيل الدخول التلقائي');
+          toast.error(
+            loginError.response?.data?.message || "فشل تسجيل الدخول التلقائي"
+          );
           setShowForgotPassword(false);
-          setForgotPasswordEmail('');
-          setResetCode('');
-          setNewPassword('');
-          setNewPasswordConfirmation('');
-          setForgotPasswordStep('email');
+          setForgotPasswordEmail("");
+          setResetCode("");
+          setNewPassword("");
+          setNewPasswordConfirmation("");
+          setForgotPasswordStep("email");
         }
       } else {
-        toast.error(response.data.message || 'فشل إعادة تعيين كلمة المرور');
+        toast.error(response.data.message || "فشل إعادة تعيين كلمة المرور");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'فشل إعادة تعيين كلمة المرور');
+      toast.error(
+        error.response?.data?.message || "فشل إعادة تعيين كلمة المرور"
+      );
     }
   };
 
@@ -293,9 +329,11 @@ const Login = () => {
         {showForgotPassword && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-[#121a2e] p-6 rounded-lg w-[90%] sm:max-w-md">
-              <h2 className="text-2xl mb-4 text-gray-600 dark:text-white">إعادة تعيين كلمة المرور</h2>
+              <h2 className="text-2xl mb-4 text-gray-600 dark:text-white">
+                إعادة تعيين كلمة المرور
+              </h2>
 
-              {forgotPasswordStep === 'email' && (
+              {forgotPasswordStep === "email" && (
                 <>
                   <input
                     type="email"
@@ -322,7 +360,7 @@ const Login = () => {
                 </>
               )}
 
-              {forgotPasswordStep === 'code' && (
+              {forgotPasswordStep === "code" && (
                 <>
                   <input
                     type="text"
@@ -335,8 +373,8 @@ const Login = () => {
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
-                        setForgotPasswordStep('email');
-                        setResetCode('');
+                        setForgotPasswordStep("email");
+                        setResetCode("");
                       }}
                       className="px-4 py-2 bg-gray-300 text-gray-600 rounded-md"
                     >
@@ -352,7 +390,7 @@ const Login = () => {
                 </>
               )}
 
-              {forgotPasswordStep === 'newPassword' && (
+              {forgotPasswordStep === "newPassword" && (
                 <>
                   <input
                     type="password"
@@ -373,9 +411,9 @@ const Login = () => {
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
-                        setForgotPasswordStep('code');
-                        setNewPassword('');
-                        setNewPasswordConfirmation('');
+                        setForgotPasswordStep("code");
+                        setNewPassword("");
+                        setNewPasswordConfirmation("");
                       }}
                       className="px-4 py-2 bg-gray-300 text-gray-600 rounded-md"
                     >
@@ -394,12 +432,15 @@ const Login = () => {
           </div>
         )}
 
-        <form onSubmit={onSubmitHandler} className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4">
+        <form
+          onSubmit={onSubmitHandler}
+          className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4"
+        >
           <div className="inline-flex items-center gap-2 mb-2 mt-10">
             <p className="text-3xl">{currentState}</p>
             <hr className="border-none h-[1.5px] w-8" />
           </div>
-          {currentState === 'إنشاء حساب' && (
+          {currentState === "إنشاء حساب" && (
             <>
               <input
                 type="text"
@@ -435,7 +476,7 @@ const Login = () => {
             placeholder="كلمة المرور"
             required
           />
-          {currentState === 'إنشاء حساب' && (
+          {currentState === "إنشاء حساب" && (
             <>
               <input
                 type="password"
@@ -463,11 +504,17 @@ const Login = () => {
               نسيت كلمة المرور؟
             </p>
             {currentState === "تسجيل الدخول" ? (
-              <p onClick={() => handleStateToggle('إنشاء حساب')} className="cursor-pointer">
+              <p
+                onClick={() => handleStateToggle("إنشاء حساب")}
+                className="cursor-pointer"
+              >
                 إنشاء حساب
               </p>
             ) : (
-              <p onClick={() => handleStateToggle('تسجيل الدخول')} className="cursor-pointer">
+              <p
+                onClick={() => handleStateToggle("تسجيل الدخول")}
+                className="cursor-pointer"
+              >
                 تسجيل الدخول هنا
               </p>
             )}
@@ -476,7 +523,7 @@ const Login = () => {
             {currentState === "تسجيل الدخول" ? "تسجيل الدخول" : "إنشاء حساب"}
           </button>
 
-          {currentState === 'تسجيل الدخول' && (
+          {currentState === "تسجيل الدخول" && (
             <div className="mt-4">
               <GoogleLogin
                 onSuccess={handleGoogleLoginSuccess}

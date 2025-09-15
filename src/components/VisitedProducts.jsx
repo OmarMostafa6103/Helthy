@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import { ShopContext } from '../context/ShopContext';
-import Title from './Title';
-import ProductItem from './ProductItem';
-import { backendUrl } from '../App';
-import { toast } from 'react-toastify';
+import { useContext, useEffect, useState, useRef } from "react";
+import axios from "axios";
+import { ShopContext } from "../context/ShopContextCore";
+import Title from "./Title";
+import ProductItem from "./ProductItem";
+import { backendUrl } from "../config";
+import { toast } from "react-toastify";
 
 // قسم لعرض المنتجات التي تمت زيارتها مؤخرًا
 const VisitedProducts = () => {
@@ -27,7 +27,7 @@ const VisitedProducts = () => {
     const fetchVisitedProducts = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
           setShouldRender(false);
           setLoading(false);
@@ -36,11 +36,11 @@ const VisitedProducts = () => {
 
         const response = await axios.get(`${backendUrl}/api/visited-products`, {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: 'include',
+          credentials: "include",
         });
 
         if (response.data.status !== 200) {
-          throw new Error(response.data.message || 'فشل جلب المنتجات المشاهدة');
+          throw new Error(response.data.message || "فشل جلب المنتجات المشاهدة");
         }
 
         const products = response.data.data || [];
@@ -65,16 +65,22 @@ const VisitedProducts = () => {
         setVisitedProducts(formattedProducts);
         setShouldRender(true);
       } catch (error) {
-        console.error('خطأ في جلب المنتجات المشاهدة:', error.response?.data || error.message);
+        console.error(
+          "خطأ في جلب المنتجات المشاهدة:",
+          error.response?.data || error.message
+        );
         if (error.response?.status === 401 || error.response?.status === 422) {
-          toast.error('جلسة تسجيل الدخول منتهية، يرجى تسجيل الدخول مرة أخرى', {
-            style: { background: 'red', color: 'white' },
+          toast.error("جلسة تسجيل الدخول منتهية، يرجى تسجيل الدخول مرة أخرى", {
+            style: { background: "red", color: "white" },
           });
           setShouldRender(false);
         } else {
-          toast.error('فشل جلب المنتجات المشاهدة: ' + (error.message || 'خطأ غير معروف'), {
-            style: { background: 'red', color: 'white' },
-          });
+          toast.error(
+            "فشل جلب المنتجات المشاهدة: " + (error.message || "خطأ غير معروف"),
+            {
+              style: { background: "red", color: "white" },
+            }
+          );
         }
         setShouldRender(false);
       } finally {
@@ -93,17 +99,28 @@ const VisitedProducts = () => {
       if (now - lastScrollTime.current < 200) return;
       lastScrollTime.current = now;
 
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      const itemWidth = window.innerWidth >= 1280 ? 220 + 24 : window.innerWidth >= 1024 ? 200 + 24 : window.innerWidth >= 768 ? 180 + 24 : window.innerWidth >= 400 ? 160 + 24 : 160 + 24;
+      const scrollLeft = scrollRef.current.scrollLeft;
+      const scrollWidth = scrollRef.current.scrollWidth;
+      const clientWidthLocal = scrollRef.current.clientWidth;
+      const itemWidth =
+        window.innerWidth >= 1280
+          ? 220 + 24
+          : window.innerWidth >= 1024
+          ? 200 + 24
+          : window.innerWidth >= 768
+          ? 180 + 24
+          : window.innerWidth >= 400
+          ? 160 + 24
+          : 160 + 24;
       const totalWidth = visitedProducts.length * itemWidth;
 
       if (totalWidth === 0) return;
 
       // إعادة ضبط التمرير للحلقة اللانهائية فقط عند الضرورة
       if (scrollLeft <= 0) {
-        scrollRef.current.scrollLeft = totalWidth - clientWidth;
-      } else if (scrollLeft >= scrollWidth - clientWidth) {
-        scrollRef.current.scrollLeft = clientWidth;
+        scrollRef.current.scrollLeft = totalWidth - clientWidthLocal;
+      } else if (scrollLeft >= scrollWidth - clientWidthLocal) {
+        scrollRef.current.scrollLeft = clientWidthLocal;
       }
     }
   };
@@ -112,16 +129,35 @@ const VisitedProducts = () => {
   const scroll = (direction) => {
     if (scrollRef.current) {
       isScrolling.current = true;
-      const { clientWidth } = scrollRef.current;
-      const itemWidth = window.innerWidth >= 1280 ? 220 + 24 : window.innerWidth >= 1024 ? 200 + 24 : window.innerWidth >= 768 ? 180 + 24 : window.innerWidth >= 400 ? 160 + 24 : 160 + 24;
-      const visibleItems = window.innerWidth >= 1280 ? 5 : window.innerWidth >= 1024 ? 4 : window.innerWidth >= 768 ? 3 : window.innerWidth >= 400 ? 2 : 1;
-      const scrollStep = window.innerWidth < 768 ? itemWidth : visibleItems * itemWidth;
+      // clientWidth not needed here; compute scroll step based on item width and visible items
+      const itemWidth =
+        window.innerWidth >= 1280
+          ? 220 + 24
+          : window.innerWidth >= 1024
+          ? 200 + 24
+          : window.innerWidth >= 768
+          ? 180 + 24
+          : window.innerWidth >= 400
+          ? 160 + 24
+          : 160 + 24;
+      const visibleItems =
+        window.innerWidth >= 1280
+          ? 5
+          : window.innerWidth >= 1024
+          ? 4
+          : window.innerWidth >= 768
+          ? 3
+          : window.innerWidth >= 400
+          ? 2
+          : 1;
+      const scrollStep =
+        window.innerWidth < 768 ? itemWidth : visibleItems * itemWidth;
 
       // التمرير لليمين أو اليسار
-      if (direction === 'right') {
-        scrollRef.current.scrollBy({ left: scrollStep, behavior: 'smooth' });
-      } else if (direction === 'left') {
-        scrollRef.current.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+      if (direction === "right") {
+        scrollRef.current.scrollBy({ left: scrollStep, behavior: "smooth" });
+      } else if (direction === "left") {
+        scrollRef.current.scrollBy({ left: -scrollStep, behavior: "smooth" });
       }
 
       // إعادة ضبط التمرير للتثبيت على العنصر الأقرب
@@ -129,7 +165,7 @@ const VisitedProducts = () => {
         if (scrollRef.current) {
           const { scrollLeft } = scrollRef.current;
           const nearestItem = Math.round(scrollLeft / itemWidth) * itemWidth;
-          scrollRef.current.scrollTo({ left: nearestItem, behavior: 'smooth' });
+          scrollRef.current.scrollTo({ left: nearestItem, behavior: "smooth" });
         }
         isScrolling.current = false;
       }, 500); // تقليل التأخير لاستجابة أسرع
@@ -151,7 +187,7 @@ const VisitedProducts = () => {
   return (
     <div id="visited-products" className="my-10 px-4 sm:px-6 lg:px-8">
       <div className="text-center py-8 text-2xl sm:text-3xl">
-        <Title text1={'المشاهدة'} text2={'مؤخرًا'} />
+        <Title text1={"المشاهدة"} text2={"مؤخرًا"} />
         <p className="w-full sm:w-3/4 mx-auto text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
           استكشف المنتجات التي شاهدتها مؤخرًا.
         </p>
@@ -160,7 +196,7 @@ const VisitedProducts = () => {
       <div className="relative max-w-[1440px] mx-auto">
         {/* زر التمرير لليسار */}
         <button
-          onClick={() => scroll('left')}
+          onClick={() => scroll("left")}
           className="absolute -left-12 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-3 sm:p-4 rounded-full shadow-xl hover:shadow-2xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 z-20 border border-gray-200 dark:border-gray-600 opacity-80 hover:opacity-100"
           aria-label="المنتج السابق"
         >
@@ -172,11 +208,9 @@ const VisitedProducts = () => {
           ref={scrollRef}
           onScroll={handleScroll}
           className="flex overflow-x-auto scrollbar-hide space-x-6 px-4 py-4 rounded-xl snap-x snap-proximity touch-pan-x bg-gray-50 dark:bg-gray-900"
-          style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
+          style={{ touchAction: "pan-x", WebkitOverflowScrolling: "touch" }}
         >
           {visitedProducts.map((item, index) => (
-            console.log(item),
-
             <div
               key={`${item.product_id}-${index}`}
               className="w-[160px] sm:w-[180px] md:w-[200px] lg:w-[220px] cursor-pointer rounded-xl shadow-md hover:shadow-lg border border-gray-200 dark:border-gray-600 transform hover:scale-105 transition-all duration-300 flex-shrink-0 snap-start bg-white dark:bg-gray-800"
@@ -188,10 +222,10 @@ const VisitedProducts = () => {
                   item.image, // = product_image
                   item.product_image1,
                   item.product_image2,
-                  item.product_image3
+                  item.product_image3,
                 ].filter(Boolean)}
                 price={item.price}
-                description={item.description || 'لا يوجد وصف متاح'}
+                description={item.description || "لا يوجد وصف متاح"}
               />
             </div>
           ))}
@@ -199,7 +233,7 @@ const VisitedProducts = () => {
 
         {/* زر التمرير لليمين */}
         <button
-          onClick={() => scroll('right')}
+          onClick={() => scroll("right")}
           className="absolute -right-12 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-3 sm:p-4 rounded-full shadow-xl hover:shadow-2xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 z-20 border border-gray-200 dark:border-gray-600 opacity-80 hover:opacity-100"
           aria-label="المنتج التالي"
         >
@@ -211,14 +245,3 @@ const VisitedProducts = () => {
 };
 
 export default VisitedProducts;
-
-
-
-
-
-
-
-
-
-
-

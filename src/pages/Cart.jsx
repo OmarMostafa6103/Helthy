@@ -213,26 +213,28 @@
 //? ========= end API ===========
 //? ========= end API ===========
 
+import { useContext, useEffect, useState, useRef } from "react";
+import { ShopContext } from "../context/ShopContextCore";
+import Title from "../components/Title";
+import { assets } from "../assets/assets";
+import { toast } from "react-toastify";
+import { backendUrl } from "../config";
 
-
-
-
-
-
-
-
-
-import React, { useContext, useEffect, useState, useRef } from 'react';
-import { ShopContext } from '../context/ShopContext';
-import Title from '../components/Title';
-import { assets } from '../assets/assets';
-import { toast } from 'react-toastify';
-import { backendUrl } from '../App';
-
-const placeholderImage = '/path/to/placeholder-image.jpg';
+const placeholderImage = "/path/to/placeholder-image.jpg";
 
 const Cart = () => {
-  const { products, currency, cartData, updateQuantity, navigate, showCart, isLoggedIn, cartTotalPrice, delivery_fee, removeFromCart } = useContext(ShopContext);
+  const {
+    products,
+    currency,
+    cartData,
+    updateQuantity,
+    navigate,
+    showCart,
+    // isLoggedIn is not used in this component
+    cartTotalPrice,
+    delivery_fee,
+    removeFromCart,
+  } = useContext(ShopContext);
   const [localCartData, setLocalCartData] = useState([]);
   const [loadingItems, setLoadingItems] = useState({});
   const hasFetchedCart = useRef(false);
@@ -242,13 +244,14 @@ const Cart = () => {
       hasFetchedCart.current = true;
       showCart();
     }
-  }, []);
+  }, [showCart]);
 
   useEffect(() => {
-    const updatedCartData = cartData.map(item => {
-      const cleanedPrice = typeof item.price === 'string'
-        ? parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0
-        : parseFloat(item.price) || 0;
+    const updatedCartData = cartData.map((item) => {
+      const cleanedPrice =
+        typeof item.price === "string"
+          ? parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0
+          : parseFloat(item.price) || 0;
       return {
         ...item,
         price: cleanedPrice,
@@ -258,14 +261,14 @@ const Cart = () => {
     setLoadingItems({});
   }, [cartData]);
 
-  const getImageUrl = (imageUrl, productId) => {
-    if (!imageUrl || typeof imageUrl !== 'string') {
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl || typeof imageUrl !== "string") {
       return placeholderImage;
     }
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
       return imageUrl;
     }
-    return `${backendUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    return `${backendUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
   };
 
   const handleQuantityChange = async (itemId, newQuantity) => {
@@ -275,25 +278,30 @@ const Cart = () => {
     try {
       const cartItem = cartData.find((item) => item.item_id === itemId);
       if (!cartItem) {
-        throw new Error('العنصر غير موجود في السلة');
+        throw new Error("العنصر غير موجود في السلة");
       }
-      const product = products.find((p) => p.product_id === cartItem.product_id);
+      const product = products.find(
+        (p) => p.product_id === cartItem.product_id
+      );
       if (!product) {
-        throw new Error('المنتج غير موجود');
+        throw new Error("المنتج غير موجود");
       }
 
       const availableQuantity = product.quantity || 0;
       if (newQuantity > availableQuantity) {
-        toast.error(`لا يمكن تحديد أكثر من ${availableQuantity} وحدة من هذا المنتج!`, {
-          style: { background: 'red', color: 'white' },
-        });
+        toast.error(
+          `لا يمكن تحديد أكثر من ${availableQuantity} وحدة من هذا المنتج!`,
+          {
+            style: { background: "red", color: "white" },
+          }
+        );
         return;
       }
 
       await updateQuantity(itemId, newQuantity, true);
     } catch (error) {
-      toast.error(error.message || 'فشل في تحديث الكمية', {
-        style: { background: 'red', color: 'white' },
+      toast.error(error.message || "فشل في تحديث الكمية", {
+        style: { background: "red", color: "white" },
       });
     } finally {
       setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
@@ -310,8 +318,11 @@ const Cart = () => {
       <div>
         {localCartData.length > 0 ? (
           localCartData.map((item) => {
-            const productData = products.find((product) => product.product_id === item.product_id);
-            const price = parseFloat(item.price) || parseFloat(productData?.price) || 0;
+            const productData = products.find(
+              (product) => product.product_id === item.product_id
+            );
+            const price =
+              parseFloat(item.price) || parseFloat(productData?.price) || 0;
 
             return (
               <div
@@ -333,7 +344,9 @@ const Cart = () => {
                     }}
                   />
                   <div>
-                    <p className="text-xs sm:text-lg font-medium">{productData?.name || item.product_name}</p>
+                    <p className="text-xs sm:text-lg font-medium">
+                      {productData?.name || item.product_name}
+                    </p>
                     <div className="flex items-center gap-5 mt-2">
                       <p className="text-sm font-semibold text-yellow-500 dark:text-yellow-400">
                         {currency}
@@ -387,7 +400,9 @@ const Cart = () => {
           })
         ) : (
           <div className="w-full mt-20 flex flex-col justify-center items-center">
-            <p className="font-medium mt-2 text-lg sm:text-2xl">Your cart is empty</p>
+            <p className="font-medium mt-2 text-lg sm:text-2xl">
+              Your cart is empty
+            </p>
           </div>
         )}
       </div>
@@ -412,7 +427,7 @@ const Cart = () => {
           <div className="w-full text-center">
             <button
               onClick={() => {
-                navigate('/place-order');
+                navigate("/place-order");
               }}
               className="text-md my-8 px-10 bg-red-600 text-white py-3"
               disabled={localCartData.length === 0}

@@ -1,5 +1,6 @@
-import React from 'react';
-import { assets } from '../assets/assets';
+// React default import not required with automatic JSX runtime
+import { assets } from "../assets/assets";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -14,11 +15,11 @@ const Hero = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <a href="/collection">
+            <Link to="/collection">
               <p className="border-2 py-2 px-4 md:py-3 md:px-6 rounded-md border-red-600 font-semibold text-base md:text-lg text-red-600 hover:bg-red-600 hover:text-white transition-all duration-300">
                 Shop Now
               </p>
-            </a>
+            </Link>
 
             <span className="w-8 md:w-10 h-[2px] bg-red-600 dark:bg-red-400"></span>
           </div>

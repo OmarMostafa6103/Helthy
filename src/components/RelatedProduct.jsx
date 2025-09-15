@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
-import ProductItem from './ProductItem';
-import Title from './Title';
+import PropTypes from "prop-types";
+import { useContext, useEffect, useState } from "react";
+import { ShopContext } from "../context/ShopContextCore";
+import ProductItem from "./ProductItem";
+import Title from "./Title";
 
 const RelatedProduct = ({ category, subCategory, scrollToProduct }) => {
   const { products } = useContext(ShopContext);
@@ -11,13 +12,15 @@ const RelatedProduct = ({ category, subCategory, scrollToProduct }) => {
     if (products.length > 0) {
       let productsCopy = products.slice();
       productsCopy = productsCopy.filter((item) => category === item.category);
-      productsCopy = productsCopy.filter((item) => subCategory === item.subCategory);
+      productsCopy = productsCopy.filter(
+        (item) => subCategory === item.subCategory
+      );
       setRelated(productsCopy.slice(0, 10));
     }
-  }, [products]);
+  }, [products, category, subCategory]);
 
   return (
-    <div className='my-24'>
+    <div className="my-24">
       <div className="text-center py-2 text-3xl">
         <Title text1={"RELATED"} text2={"PRODUCTS"} />
         <p className="w-3/4 m-auto text-xs sm:text:sm md:text-base ">
@@ -25,23 +28,33 @@ const RelatedProduct = ({ category, subCategory, scrollToProduct }) => {
         </p>
       </div>
 
-    
       <div className="grid overflow-hidden grid-cols-2 mt-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 gap-y-6">
         {related.map((item, index) => (
-          <div className="cursor-pointer border-2 rounded-md dark:border-none border-gray-400 px-3"
+          <div
+            className="cursor-pointer border-2 rounded-md dark:border-none border-gray-400 px-3"
             key={index}
-            
             onClick={() => {
-              scrollToProduct(); 
-              window.location.href = `/product/${item.product_id}`; 
+              scrollToProduct();
+              window.location.href = `/product/${item.product_id}`;
             }}
           >
-            <ProductItem id={item.product_id} image={item.image} name={item.name} price={item.price} />
+            <ProductItem
+              id={item.product_id}
+              image={item.image}
+              name={item.name}
+              price={item.price}
+            />
           </div>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default RelatedProduct;
+
+RelatedProduct.propTypes = {
+  category: PropTypes.string,
+  subCategory: PropTypes.string,
+  scrollToProduct: PropTypes.func,
+};

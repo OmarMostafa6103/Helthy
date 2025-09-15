@@ -1,16 +1,27 @@
 //? ========= START API ===========
 //? ========= START API ===========
 
-import React, { useContext, useState, memo } from 'react';
-import { ShopContext } from '../context/ShopContext';
-import { Link } from 'react-router-dom';
-import ModalPortal from './ModalPortal';
+import PropTypes from "prop-types";
+import { useContext, useState, memo } from "react";
+import { ShopContext } from "../context/ShopContextCore";
+import { Link } from "react-router-dom";
+import ModalPortal from "./ModalPortal";
 
 const ProductItem = ({ id, image, name, price, description }) => {
-  const { currency, addToCart, cartData, updateQuantity, addToFavorites, removeFromFavorites, isProductFavorited } = useContext(ShopContext);
+  const {
+    currency,
+    addToCart,
+    cartData,
+    updateQuantity,
+    addToFavorites,
+    removeFromFavorites,
+    isProductFavorited,
+  } = useContext(ShopContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(
-    Array.isArray(image) && image.length > 0 ? image[0] : image || '/path/to/placeholder-image.jpg'
+    Array.isArray(image) && image.length > 0
+      ? image[0]
+      : image || "/path/to/placeholder-image.jpg"
   );
   const [isUpdating, setIsUpdating] = useState(false); // حالة جديدة لتتبع التحميل
 
@@ -32,7 +43,8 @@ const ProductItem = ({ id, image, name, price, description }) => {
   const images = Array.isArray(image) ? image : [image].filter((img) => img);
 
   // تحقق من السعر وتنسيقه
-  const displayPrice = price && price > 0 ? `${currency} ${price}` : 'السعر غير متاح';
+  const displayPrice =
+    price && price > 0 ? `${currency} ${price}` : "السعر غير متاح";
 
   // دالة لتحديث الكمية مع إدارة حالة التحميل
   const handleUpdateQuantity = async (newQuantity) => {
@@ -67,11 +79,11 @@ const ProductItem = ({ id, image, name, price, description }) => {
       <Link to={`/product/${id}`} className="block">
         <div className="relative overflow-hidden rounded-t-xl">
           <img
-            src={images[0] || '/path/to/placeholder-image.jpg'}
+            src={images[0] || "/path/to/placeholder-image.jpg"}
             alt={name}
             className="w-full h-48 object-cover rounded-t-xl hover:scale-105 transition-transform duration-300"
             onError={(e) => {
-              e.target.src = '/path/to/placeholder-image.jpg';
+              e.target.src = "/path/to/placeholder-image.jpg";
               e.target.onerror = null;
             }}
             loading="lazy"
@@ -84,8 +96,16 @@ const ProductItem = ({ id, image, name, price, description }) => {
           </button>
         </div>
         <div className="pt-3 px-4 text-right">
-          <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">{name}</p>
-          <p className={`text-sm font-semibold mt-1 ${price && price > 0 ? 'text-yellow-600 dark:text-yellow-500' : 'text-gray-500'}`}>
+          <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">
+            {name}
+          </p>
+          <p
+            className={`text-sm font-semibold mt-1 ${
+              price && price > 0
+                ? "text-yellow-600 dark:text-yellow-500"
+                : "text-gray-500"
+            }`}
+          >
             {displayPrice}
           </p>
         </div>
@@ -103,7 +123,9 @@ const ProductItem = ({ id, image, name, price, description }) => {
             {isUpdating ? (
               <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-green-600"></div>
             ) : (
-              <span className="text-sm text-gray-800 dark:text-white">{quantityInCart}</span>
+              <span className="text-sm text-gray-800 dark:text-white">
+                {quantityInCart}
+              </span>
             )}
             <button
               onClick={() => handleUpdateQuantity(quantityInCart + 1)}
@@ -122,27 +144,33 @@ const ProductItem = ({ id, image, name, price, description }) => {
             {isUpdating ? (
               <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
             ) : (
-              'إضافة إلى السلة'
+              "إضافة إلى السلة"
             )}
           </button>
         )}
         <button
           onClick={handleFavorite}
-          className={`text-sm p-2 rounded-full transition-colors duration-200 ${isFavorited ? 'text-pink-600 bg-pink-100' : 'text-gray-600 bg-gray-100'} hover:bg-pink-200`}
+          className={`text-sm p-2 rounded-full transition-colors duration-200 ${
+            isFavorited
+              ? "text-pink-600 bg-pink-100"
+              : "text-gray-600 bg-gray-100"
+          } hover:bg-pink-200`}
         >
-          {isFavorited ? '❤️' : '🤍'}
+          {isFavorited ? "❤️" : "🤍"}
         </button>
       </div>
 
       {isModalOpen && (
         <ModalPortal>
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]" onClick={closeModal}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]"
+            onClick={closeModal}
+          >
             <div
               className="bg-white rounded-xl p-6 max-w-5xl w-full relative flex flex-col md:flex-row-reverse gap-6 mx-4 md:mx-auto"
               dir="rtl"
               onClick={(e) => e.stopPropagation()}
             >
-
               <button
                 onClick={closeModal}
                 className="absolute top-2 left-2 text-gray-600 hover:text-gray-800 bg-gray-200 rounded-full p-1"
@@ -168,7 +196,7 @@ const ProductItem = ({ id, image, name, price, description }) => {
                   alt={name}
                   className="w-full h-80 object-contain rounded-lg mb-4"
                   onError={(e) => {
-                    e.target.src = '/path/to/placeholder-image.jpg';
+                    e.target.src = "/path/to/placeholder-image.jpg";
                     e.target.onerror = null;
                   }}
                 />
@@ -178,10 +206,14 @@ const ProductItem = ({ id, image, name, price, description }) => {
                       <img
                         key={idx}
                         src={img}
-                        className={`w-16 h-16 object-cover rounded border-2 cursor-pointer ${selectedImage === img ? 'border-green-600' : 'border-gray-300'}`}
+                        className={`w-16 h-16 object-cover rounded border-2 cursor-pointer ${
+                          selectedImage === img
+                            ? "border-green-600"
+                            : "border-gray-300"
+                        }`}
                         onClick={() => setSelectedImage(img)}
                         onError={(e) => {
-                          e.target.src = '/path/to/placeholder-image.jpg';
+                          e.target.src = "/path/to/placeholder-image.jpg";
                           e.target.onerror = null;
                         }}
                       />
@@ -193,16 +225,22 @@ const ProductItem = ({ id, image, name, price, description }) => {
                 <div>
                   <h2 className="text-2xl font-bold mb-2">{name}</h2>
                   <p className="text-gray-600 text-sm leading-loose mb-4">
-                    {description || 'لا يوجد وصف متاح'}
+                    {description || "لا يوجد وصف متاح"}
                   </p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <span className={`text-lg font-bold ${price && price > 0 ? 'text-yellow-700' : 'text-gray-500'}`}>
+                    <span
+                      className={`text-lg font-bold ${
+                        price && price > 0 ? "text-yellow-700" : "text-gray-500"
+                      }`}
+                    >
                       {displayPrice}
                     </span>
                     {price && price > 0 && (
-                      <span className="text-sm text-gray-500">شامل الضرائب</span>
+                      <span className="text-sm text-gray-500">
+                        شامل الضرائب
+                      </span>
                     )}
                   </div>
                   {quantityInCart > 0 ? (
@@ -217,7 +255,9 @@ const ProductItem = ({ id, image, name, price, description }) => {
                       {isUpdating ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-green-600"></div>
                       ) : (
-                        <span className="text-sm text-gray-800 dark:text-white">{quantityInCart}</span>
+                        <span className="text-sm text-gray-800 dark:text-white">
+                          {quantityInCart}
+                        </span>
                       )}
                       <button
                         onClick={() => handleUpdateQuantity(quantityInCart + 1)}
@@ -236,23 +276,24 @@ const ProductItem = ({ id, image, name, price, description }) => {
                       {isUpdating ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
                       ) : (
-                        'إضافة إلى السلة'
+                        "إضافة إلى السلة"
                       )}
                     </button>
                   )}
-                  <button
-                    className="border border-green-800 text-green-800 py-2 px-4 w-full rounded-lg hover:bg-green-50"
-                  >
+                  <button className="border border-green-800 text-green-800 py-2 px-4 w-full rounded-lg hover:bg-green-50">
                     اشترِ الآن
                   </button>
                   <button
                     onClick={handleFavorite}
-                    className={`mt-2 w-full py-2 px-4 rounded-lg border ${isFavorited
-                      ? 'border-pink-600 text-pink-600 bg-pink-100'
-                      : 'border-gray-300 text-gray-600'
-                      }`}
+                    className={`mt-2 w-full py-2 px-4 rounded-lg border ${
+                      isFavorited
+                        ? "border-pink-600 text-pink-600 bg-pink-100"
+                        : "border-gray-300 text-gray-600"
+                    }`}
                   >
-                    {isFavorited ? '❤️ تمت الإضافة إلى المفضلة' : '🤍 إضافة إلى المفضلة'}
+                    {isFavorited
+                      ? "❤️ تمت الإضافة إلى المفضلة"
+                      : "🤍 إضافة إلى المفضلة"}
                   </button>
                 </div>
               </div>
@@ -260,14 +301,19 @@ const ProductItem = ({ id, image, name, price, description }) => {
           </div>
         </ModalPortal>
       )}
-
-
     </div>
   );
+};
+
+ProductItem.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  image: PropTypes.oneOfType([PropTypes.array, PropTypes.string]),
+  name: PropTypes.string,
+  price: PropTypes.number,
+  description: PropTypes.string,
 };
 
 export default memo(ProductItem);
 
 //? ========= end API ===========
 //? ========= end API ===========
-

@@ -8,7 +8,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   // Set base to the repository name used for GitHub Pages
   // The site is served at https://omarmostafa6103.github.io/Helthy/
-  base: '/Helthy/',
+  base: "/Helthy/",
   plugins: [react()],
   server: { port: 5174 },
 });

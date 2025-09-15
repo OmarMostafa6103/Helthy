@@ -1,20 +1,15 @@
 //? ========= START API ===========
 //? ========= START API ===========
 
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-} from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
-import { backendUrl } from "../App";
+import PropTypes from "prop-types";
+import { backendUrl } from "../config";
+import { ShopContext } from "./ShopContextCore";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { debounce } from "lodash";
-
-export const ShopContext = createContext();
+// lodash debounce not currently used; keep commented for future use
+// import { debounce } from "lodash";
 
 const ShopContextProvider = (props) => {
   // const currency = ' EGP ';
@@ -55,7 +50,7 @@ const ShopContextProvider = (props) => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [nextPageUrl, setNextPageUrl] = useState(null); // ✅ هذا هو السطر المفقود
-  const [prevPageUrl, setPrevPageUrl] = useState(null);
+  // prevPageUrl removed: not currently used
 
   const navigate = useNavigate();
   const hasFetchedProducts = useRef(false);
@@ -64,6 +59,51 @@ const ShopContextProvider = (props) => {
   const hasShownAuthWarning = useRef(false);
   const isFetching = useRef(false);
   const hasFetchedCart = useRef(false);
+  // refs to hold latest values so callbacks can stay stable
+  const productsRef = useRef(products);
+  const isLoadingProductsRef = useRef(isLoadingProducts);
+  const currentPageRef = useRef(currentPage);
+  const lastPageRef = useRef(lastPage);
+  const nextPageUrlRef = useRef(nextPageUrl);
+
+  // sync refs with state
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+  useEffect(() => {
+    isLoadingProductsRef.current = isLoadingProducts;
+  }, [isLoadingProducts]);
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+  useEffect(() => {
+    lastPageRef.current = lastPage;
+  }, [lastPage]);
+  useEffect(() => {
+    nextPageUrlRef.current = nextPageUrl;
+  }, [nextPageUrl]);
+
+  // عرض تحذير المصادقة للمستخدم عندما تنتهي الجلسة
+  const showAuthWarning = () => {
+    if (hasShownAuthWarning.current) return;
+    hasShownAuthWarning.current = true;
+    toast.warn(
+      <div>
+        انتهت الجلسة أو غير صالحة. يرجى تسجيل الدخول مرة أخرى.
+        <button
+          onClick={() => {
+            navigate("/login");
+          }}
+          className="ml-2 px-2 py-1 bg-blue-500 text-white rounded"
+        >
+          تسجيل الدخول
+        </button>
+      </div>,
+      {
+        autoClose: false,
+      }
+    );
+  };
 
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem("favorites");
@@ -86,15 +126,7 @@ const ShopContextProvider = (props) => {
     initializeAuth();
   }, []);
 
-  useEffect(() => {
-    const fetchInitialProducts = async () => {
-      if (!hasFetchedProducts.current) {
-        await fetchProducts(1, 25, false);
-        hasFetchedProducts.current = true;
-      }
-    };
-    fetchInitialProducts();
-  }, []);
+  // initial products fetch will be set after fetchProducts is defined
 
   // جزء عمل تسجيل دخول مرا اخري
 
@@ -310,245 +342,209 @@ const ShopContextProvider = (props) => {
   //     }
   // };
 
-  const fetchProducts = async (
-    page = 1,
-    limit = 25,
-    append = false,
-    customProducts = null,
-    fullUrl = null,
-    categoryId = null
-  ) => {
-    console.log("🚀 fetchProducts called with", {
-      page,
-      fullUrl,
-      append,
-      categoryId,
-    });
+  // intentionally keep fetchProducts stable and read live state from refs
+  const fetchProducts = useCallback(
+    async (
+      page = 1,
+      limit = 25,
+      append = false,
+      fullUrl = null,
+      categoryId = null
+    ) => {
+      console.log("🚀 fetchProducts called with", {
+        page,
+        fullUrl,
+        append,
+        categoryId,
+      });
 
-    // استخراج رقم الصفحة من fullUrl إن وُجد
-    if (fullUrl) {
-      const parsedPage = Number(new URL(fullUrl).searchParams.get("page"));
-      if (!isNaN(parsedPage)) {
-        page = parsedPage;
-      }
-    }
-
-    // التحقق من حالات التكرار أو التحميل الجاري
-    if (
-      isLoadingProducts ||
-      (lastFetchedPage.current === page && !append && !fullUrl)
-    ) {
-      console.log("⛔ تم تجاهل التحميل: قيد التحميل أو نفس الصفحة", { page });
-      setIsLoadingProducts(false);
-      return;
-    }
-
-    if (!fullUrl && (page > lastPage || page < 1)) {
-      console.log("⛔ تم تجاهل التحميل: رقم الصفحة غير صالح", { page });
-      setIsLoadingProducts(false);
-      return;
-    }
-
-    lastFetchedPage.current = page;
-    setIsLoadingProducts(true);
-
-    try {
-      const token = localStorage.getItem("token");
-      let url =
-        fullUrl || `${backendUrl}/api/products?page=${page}&limit=${limit}`;
-      // إذا كان nextPageUrl موجود ولا يحتوي على limit=25، أضفها يدوياً
-      if (fullUrl && !fullUrl.includes("limit=")) {
-        url += (url.includes("?") ? "&" : "?") + `limit=${limit}`;
-      }
-      if (categoryId && !fullUrl) {
-        url += `&category_id=${categoryId}`;
+      // استخراج رقم الصفحة من fullUrl إن وُجد
+      if (fullUrl) {
+        const parsedPage = Number(new URL(fullUrl).searchParams.get("page"));
+        if (!isNaN(parsedPage)) {
+          page = parsedPage;
+        }
       }
 
-      // أوقف التحميل إذا كان nextPageUrl = null أو currentPage >= lastPage
-      if (fullUrl && (!nextPageUrl || currentPage >= lastPage)) {
+      // التحقق من حالات التكرار أو التحميل الجاري (استخدم refs لتجنب إعادة الإنشاء)
+      if (
+        isLoadingProductsRef.current ||
+        (lastFetchedPage.current === page && !append && !fullUrl)
+      ) {
+        console.log("⛔ تم تجاهل التحميل: قيد التحميل أو نفس الصفحة", { page });
         setIsLoadingProducts(false);
         return;
       }
 
-      console.log("🌐 Fetching from:", url);
-
-      const response = await axios.get(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      if (response.data.status !== 200) {
-        throw new Error(response.data.message || "فشل في جلب المنتجات");
-      }
-
-      const data = Array.isArray(response.data.data)
-        ? response.data.data
-        : (response.data.data?.products || []);
-      const pagination = response.data.data?.Pagination || {};
-
-      console.log("🧪 pagination object:", pagination);
-      console.log("📦 Raw products length:", data.length);
-
-      if (data.length === 0 && append) {
-        console.log("ℹ️ لا مزيد من المنتجات");
+      if (!fullUrl && (page > lastPageRef.current || page < 1)) {
+        console.log("⛔ تم تجاهل التحميل: رقم الصفحة غير صالح", { page });
+        setIsLoadingProducts(false);
         return;
       }
 
-      const formattedProducts = data.map((product) => ({
-        _id: product.product_slugs || product.id || "",
-        product_id: product.product_id || "",
-        name: product.product_name || "منتج غير مسمى",
-        description: product.product_description || "",
-        image: [
-          product.product_image,
-          product.product_image1,
-          product.product_image2,
-          product.product_image3,
-        ].filter((img) => img),
-        price: parseFloat(product.product_price || product.price) || 0,
-        quantity: parseInt(product.product_quantity) || 0,
-        category: product.category?.category_name || "غير معروف",
-        category_id:
-          product.category?.categor_id ||
-          product.category?.category_id ||
-          product.category_id ||
-          null,
-      }));
+      lastFetchedPage.current = page;
+      setIsLoadingProducts(true);
 
-      console.log(
-        "📥 formattedProducts (append =",
-        append,
-        "):",
-        formattedProducts.length
-      );
-
-      const currentPageFromApi = pagination.current_page || page;
-      const total = pagination.total || 0;
-      const perPage = pagination.per_page || limit;
-      const lastPageFromApi =
-        pagination.last_page || Math.ceil(total / perPage);
-
-      let nextPageUrlFromApi = pagination.next_page_url || null;
-      const prevPageUrlFromApi = pagination.prev_page_url || null;
-
-      const existingCount = append ? products.length : 0;
-      const currentProductCount = existingCount + formattedProducts.length;
-
-      if (currentProductCount >= total) {
-        console.log("✅ جميع المنتجات تم تحميلها");
-        nextPageUrlFromApi = null;
-      }
-
-      if (append) {
-        setProducts((prev) => {
-          // دمج المنتجات بدون تكرار حسب product_id
-          const all = [...prev, ...formattedProducts];
-          const unique = [];
-          const seen = new Set();
-          for (const prod of all) {
-            if (!seen.has(prod.product_id)) {
-              unique.push(prod);
-              seen.add(prod.product_id);
-            }
-          }
-          return unique;
-        });
-      } else {
-        setProducts(formattedProducts);
-      }
-
-      // تحديث الصفحات فقط من Pagination
-      setCurrentPage(currentPageFromApi);
-      setLastPage(lastPageFromApi);
-      setNextPageUrl(nextPageUrlFromApi);
-      setPrevPageUrl(prevPageUrlFromApi);
-
-      console.log("✅ nextPageUrl extracted:", nextPageUrlFromApi);
-      console.log(
-        `📦 Loaded page ${currentPageFromApi}, total products: ${currentProductCount}/${total}, lastPage: ${lastPageFromApi}`
-      );
-    } catch (error) {
-      console.error("❌ Fetch error:", error.message);
-      toast.error(
-        "فشل في جلب المنتجات: " + (error.message || "خطأ غير معروف"),
-        {
-          style: { background: "red", color: "white" },
-        }
-      );
-      if (!append) setProducts([]);
-    } finally {
-      console.log("🧹 Resetting isLoadingProducts to false");
-      setIsLoadingProducts(false);
-    }
-  };
-
-  const showCart = async (retries = 3) => {
-    if (!isLoggedIn) {
-      const localCart = JSON.parse(localStorage.getItem("localCart") || "[]");
-      if (localCart.length === 0) {
-        setCartData([]);
-        setCartItems({});
-        setCartTotalPrice(0); // إعادة تعيين total_price للسلة المحلية
-      } else {
-        const updatedLocalCart = localCart.map((item) => {
-          const product = products.find(
-            (p) => p.product_id === item.product_id
-          );
-          const price =
-            typeof item.price === "string"
-              ? parseFloat(item.price.replace(/[^0-9.]/g, ""))
-              : parseFloat(item.price) || 0;
-          const quantity = parseInt(item.quantity) || 0;
-          return {
-            ...item,
-            price: price,
-            quantity: quantity,
-            image:
-              item.image ||
-              product?.image?.[0] ||
-              "/path/to/placeholder-image.jpg",
-          };
-        });
-        setCartData(updatedLocalCart);
-        const newCartItems = {};
-        let totalPrice = 0;
-        updatedLocalCart.forEach((item) => {
-          newCartItems[item.product_id] = item.quantity;
-          totalPrice += item.price * item.quantity;
-        });
-        setCartItems(newCartItems);
-        // تحديث total_price للسلة المحلية
-        setCartTotalPrice(totalPrice);
-      }
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    console.log("🪪 Token used for cart request:", token);
-    if (!token) {
-      setCartData([]);
-      setCartItems({});
-      setCartTotalPrice(0); // إعادة تعيين total_price
-      return;
-    }
-
-    for (let i = 0; i < retries; i++) {
       try {
-        const response = await axios.get(`${backendUrl}/api/cart`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
+        const token = localStorage.getItem("token");
+        let url =
+          fullUrl || `${backendUrl}/api/products?page=${page}&limit=${limit}`;
+        // إذا كان nextPageUrl موجود ولا يحتوي على limit=25، أضفها يدوياً
+        if (fullUrl && !fullUrl.includes("limit=")) {
+          url += (url.includes("?") ? "&" : "?") + `limit=${limit}`;
+        }
+        if (categoryId && !fullUrl) {
+          url += `&category_id=${categoryId}`;
+        }
+
+        // أوقف التحميل إذا كان nextPageUrl = null أو currentPage >= lastPage
+        if (
+          fullUrl &&
+          (!nextPageUrlRef.current ||
+            currentPageRef.current >= lastPageRef.current)
+        ) {
+          setIsLoadingProducts(false);
+          return;
+        }
+
+        console.log("🌐 Fetching from:", url);
+
+        const response = await axios.get(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
-        if (response.data.status === 200) {
-          let updatedCartData = response.data.data.items || [];
-          updatedCartData = Array.isArray(updatedCartData)
-            ? updatedCartData
-            : updatedCartData
-            ? [updatedCartData]
-            : [];
+        if (response.data.status !== 200) {
+          throw new Error(response.data.message || "فشل في جلب المنتجات");
+        }
 
-          updatedCartData = updatedCartData.map((item) => {
+        const data = Array.isArray(response.data.data)
+          ? response.data.data
+          : response.data.data?.products || [];
+        const pagination = response.data.data?.Pagination || {};
+
+        console.log("🧪 pagination object:", pagination);
+        console.log("📦 Raw products length:", data.length);
+
+        if (data.length === 0 && append) {
+          console.log("ℹ️ لا مزيد من المنتجات");
+          return;
+        }
+
+        const formattedProducts = data.map((product) => ({
+          _id: product.product_slugs || product.id || "",
+          product_id: product.product_id || "",
+          name: product.product_name || "منتج غير مسمى",
+          description: product.product_description || "",
+          image: [
+            product.product_image,
+            product.product_image1,
+            product.product_image2,
+            product.product_image3,
+          ].filter((img) => img),
+          price: parseFloat(product.product_price || product.price) || 0,
+          quantity: parseInt(product.product_quantity) || 0,
+          category: product.category?.category_name || "غير معروف",
+          category_id:
+            product.category?.categor_id ||
+            product.category?.category_id ||
+            product.category_id ||
+            null,
+        }));
+
+        console.log(
+          "📥 formattedProducts (append =",
+          append,
+          "):",
+          formattedProducts.length
+        );
+
+        const currentPageFromApi = pagination.current_page || page;
+        const total = pagination.total || 0;
+        const perPage = pagination.per_page || limit;
+        const lastPageFromApi =
+          pagination.last_page || Math.ceil(total / perPage);
+
+        let nextPageUrlFromApi = pagination.next_page_url || null;
+
+        const existingCount = append ? (productsRef.current || []).length : 0;
+        const currentProductCount = existingCount + formattedProducts.length;
+
+        if (currentProductCount >= total) {
+          console.log("✅ جميع المنتجات تم تحميلها");
+          nextPageUrlFromApi = null;
+        }
+
+        if (append) {
+          setProducts((prev) => {
+            // دمج المنتجات بدون تكرار حسب product_id
+            const all = [...prev, ...formattedProducts];
+            const unique = [];
+            const seen = new Set();
+            for (const prod of all) {
+              if (!seen.has(prod.product_id)) {
+                unique.push(prod);
+                seen.add(prod.product_id);
+              }
+            }
+            return unique;
+          });
+        } else {
+          setProducts(formattedProducts);
+        }
+
+        // تحديث الصفحات فقط من Pagination
+        setCurrentPage(currentPageFromApi);
+        setLastPage(lastPageFromApi);
+        setNextPageUrl(nextPageUrlFromApi);
+        // prevPageUrl handling removed (not used)
+
+        console.log("✅ nextPageUrl extracted:", nextPageUrlFromApi);
+        console.log(
+          `📦 Loaded page ${currentPageFromApi}, total products: ${currentProductCount}/${total}, lastPage: ${lastPageFromApi}`
+        );
+      } catch (error) {
+        console.error("❌ Fetch error:", error.message);
+        toast.error(
+          "فشل في جلب المنتجات: " + (error.message || "خطأ غير معروف"),
+          {
+            style: { background: "red", color: "white" },
+          }
+        );
+        if (!append) setProducts([]);
+      } finally {
+        console.log("🧹 Resetting isLoadingProducts to false");
+        setIsLoadingProducts(false);
+      }
+    },
+    // keep fetchProducts stable; internal logic reads latest state from refs
+    []
+  );
+
+  // initial products fetch (run after fetchProducts is defined)
+  useEffect(() => {
+    const fetchInitialProducts = async () => {
+      if (!hasFetchedProducts.current) {
+        try {
+          await fetchProducts(1, 25, false);
+        } catch (err) {
+          console.error("Initial fetchProducts failed:", err);
+        }
+        hasFetchedProducts.current = true;
+      }
+    };
+    fetchInitialProducts();
+  }, [fetchProducts]);
+
+  const showCart = useCallback(
+    async (retries = 3) => {
+      if (!isLoggedIn) {
+        const localCart = JSON.parse(localStorage.getItem("localCart") || "[]");
+        if (localCart.length === 0) {
+          setCartData([]);
+          setCartItems({});
+          setCartTotalPrice(0); // إعادة تعيين total_price للسلة المحلية
+        } else {
+          const updatedLocalCart = localCart.map((item) => {
             const product = products.find(
               (p) => p.product_id === item.product_id
             );
@@ -558,71 +554,133 @@ const ShopContextProvider = (props) => {
                 : parseFloat(item.price) || 0;
             const quantity = parseInt(item.quantity) || 0;
             return {
-              product_id: item.product_id,
-              quantity: quantity,
-              product_name: item.product_name,
+              ...item,
               price: price,
+              quantity: quantity,
               image:
                 item.image ||
                 product?.image?.[0] ||
                 "/path/to/placeholder-image.jpg",
-              item_id: item.item_id,
             };
           });
-
-          setCartData(updatedCartData);
+          setCartData(updatedLocalCart);
           const newCartItems = {};
-          updatedCartData.forEach((item) => {
+          let totalPrice = 0;
+          updatedLocalCart.forEach((item) => {
             newCartItems[item.product_id] = item.quantity;
+            totalPrice += item.price * item.quantity;
           });
           setCartItems(newCartItems);
-          // تخزين total_price من الاستجابة
-          const totalPrice = parseFloat(response.data.data.total_price) || 0;
+          // تحديث total_price للسلة المحلية
           setCartTotalPrice(totalPrice);
-          break;
-        } else {
-          throw new Error(response.data.message || "فشل في جلب بيانات السلة");
         }
-      } catch (error) {
-        console.error(
-          "Error fetching cart, attempt",
-          i + 1,
-          ":",
-          error.message
-        );
-        if (i === retries - 1) {
-          if (
-            error.response?.status === 401 ||
-            error.response?.status === 422
-          ) {
-            // فقط إعادة تعيين السلة بدون أي رسالة أو إعادة توجيه
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      console.log("🪪 Token used for cart request:", token);
+      if (!token) {
+        setCartData([]);
+        setCartItems({});
+        setCartTotalPrice(0); // إعادة تعيين total_price
+        return;
+      }
+
+      for (let i = 0; i < retries; i++) {
+        try {
+          const response = await axios.get(`${backendUrl}/api/cart`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          });
+
+          if (response.data.status === 200) {
+            let updatedCartData = response.data.data.items || [];
+            updatedCartData = Array.isArray(updatedCartData)
+              ? updatedCartData
+              : updatedCartData
+              ? [updatedCartData]
+              : [];
+
+            updatedCartData = updatedCartData.map((item) => {
+              const product = products.find(
+                (p) => p.product_id === item.product_id
+              );
+              const price =
+                typeof item.price === "string"
+                  ? parseFloat(item.price.replace(/[^0-9.]/g, ""))
+                  : parseFloat(item.price) || 0;
+              const quantity = parseInt(item.quantity) || 0;
+              return {
+                product_id: item.product_id,
+                quantity: quantity,
+                product_name: item.product_name,
+                price: price,
+                image:
+                  item.image ||
+                  product?.image?.[0] ||
+                  "/path/to/placeholder-image.jpg",
+                item_id: item.item_id,
+              };
+            });
+
+            setCartData(updatedCartData);
+            const newCartItems = {};
+            updatedCartData.forEach((item) => {
+              newCartItems[item.product_id] = item.quantity;
+            });
+            setCartItems(newCartItems);
+            // تخزين total_price من الاستجابة
+            const totalPrice = parseFloat(response.data.data.total_price) || 0;
+            setCartTotalPrice(totalPrice);
+            break;
+          } else {
+            throw new Error(response.data.message || "فشل في جلب بيانات السلة");
+          }
+        } catch (error) {
+          console.error(
+            "Error fetching cart, attempt",
+            i + 1,
+            ":",
+            error.message
+          );
+          if (i === retries - 1) {
+            if (
+              error.response?.status === 401 ||
+              error.response?.status === 422
+            ) {
+              // فقط إعادة تعيين السلة بدون أي رسالة أو إعادة توجيه
+              setCartData([]);
+              setCartItems({});
+              setCartTotalPrice(0);
+              return;
+            } else {
+              toast.error(
+                "فشل في جلب بيانات السلة: " +
+                  (error.message || "خطأ غير معروف"),
+                {
+                  style: { background: "red", color: "white" },
+                }
+              );
+            }
             setCartData([]);
             setCartItems({});
             setCartTotalPrice(0);
-            return;
           } else {
-            toast.error(
-              "فشل في جلب بيانات السلة: " + (error.message || "خطأ غير معروف"),
-              {
-                style: { background: "red", color: "white" },
-              }
-            );
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
-          setCartData([]);
-          setCartItems({});
-          setCartTotalPrice(0);
-        } else {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
-    }
-  };
+    },
+    [isLoggedIn, products]
+  );
 
   useEffect(() => {
     if (isAuthChecked) {
       showCart();
     }
-  }, [isAuthChecked]);
+  }, [isAuthChecked, showCart]);
 
   const addToCart = useCallback(
     async (itemId, quantity = 1, price, availableQuantity) => {
@@ -777,7 +835,7 @@ const ShopContextProvider = (props) => {
         }
       }
     },
-    [isLoggedIn, products, cartItems]
+    [isLoggedIn, products, cartItems, fetchProducts, navigate, showCart]
   );
 
   const getCartCount = () => {
@@ -787,7 +845,10 @@ const ShopContextProvider = (props) => {
         if (item.quantity > 0) {
           totalCount += item.quantity;
         }
-      } catch (error) {}
+      } catch (error) {
+        // Log unexpected errors during local iteration
+        console.error("Error computing cart count item:", error);
+      }
     }
     return totalCount;
   };
@@ -1126,12 +1187,13 @@ const ShopContextProvider = (props) => {
 
   const addToFavorites = (product) => {
     setFavorites((prev) => {
-      if (prev.some((item) => item.product_id === product.product_id)) return prev;
+      if (prev.some((item) => item.product_id === product.product_id))
+        return prev;
       const updated = [...prev, product];
       localStorage.setItem("favorites", JSON.stringify(updated));
       toast.success("تمت إضافة المنتج إلى المفضلة!", {
         style: { background: "green", color: "white" },
-        icon: "❤️"
+        icon: "❤️",
       });
       return updated;
     });
@@ -1143,7 +1205,7 @@ const ShopContextProvider = (props) => {
       localStorage.setItem("favorites", JSON.stringify(updated));
       toast.error("تمت إزالة المنتج من المفضلة!", {
         style: { background: "#dc2626", color: "white" },
-        icon: "💔"
+        icon: "💔",
       });
       return updated;
     });
@@ -1199,12 +1261,13 @@ const ShopContextProvider = (props) => {
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
       if (
         nearBottom &&
-        nextPageUrl &&
-        !isLoadingProducts &&
+        nextPageUrlRef.current &&
+        !isLoadingProductsRef.current &&
         !isFetching.current
       ) {
         isFetching.current = true;
-        fetchProducts(null, 25, true, null, nextPageUrl).finally(() => {
+        // pass nextPageUrl as fullUrl (4th arg) and let fetchProducts extract page
+        fetchProducts(null, 25, true, nextPageUrlRef.current).finally(() => {
           isFetching.current = false;
         });
       }
@@ -1216,6 +1279,10 @@ const ShopContextProvider = (props) => {
   return (
     <ShopContext.Provider value={value}>{props.children}</ShopContext.Provider>
   );
+};
+
+ShopContextProvider.propTypes = {
+  children: PropTypes.node,
 };
 
 export default ShopContextProvider;

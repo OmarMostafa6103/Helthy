@@ -478,12 +478,12 @@
 
 // !================ START STRIPE =================
 
-import React, { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import Title from "../components/Title";
-import { ShopContext } from "../context/ShopContext";
+import { ShopContext } from "../context/ShopContextCore";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { backendUrl } from "../App";
+import { backendUrl } from "../config";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -664,6 +664,18 @@ const CheckoutForm = ({
   );
 };
 
+// PropTypes for CheckoutForm
+import PropTypes from "prop-types";
+
+CheckoutForm.propTypes = {
+  orderId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  cartData: PropTypes.array,
+  token: PropTypes.string,
+  navigate: PropTypes.func,
+  resetCart: PropTypes.func,
+  totalAmount: PropTypes.number,
+};
+
 const PlaceOrder = () => {
   const [method, setMethod] = useState("cod");
   const [orderType, setOrderType] = useState("عادي");
@@ -835,7 +847,7 @@ const PlaceOrder = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-medium flex items-center gap-2 dark:text-white">
+                <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
                   الاسم الأول <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -847,7 +859,7 @@ const PlaceOrder = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium flex items-center gap-2 dark:text-white">
+                <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
                   الاسم الأخير <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -861,7 +873,7 @@ const PlaceOrder = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-medium flex items-center gap-2 dark:text-white">
+                <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
                   رقم الهاتف <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -873,7 +885,7 @@ const PlaceOrder = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium flex items-center gap-2 dark:text-white">
+                <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
                   البريد الإلكتروني <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -939,7 +951,7 @@ const PlaceOrder = () => {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-1 font-medium flex items-center gap-2 dark:text-white">
+                  <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
                     اسم المستلم <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -951,7 +963,7 @@ const PlaceOrder = () => {
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 font-medium flex items-center gap-2 dark:text-white">
+                  <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
                     رقم هاتف المستلم <span className="text-red-500">*</span>
                   </label>
                   <input

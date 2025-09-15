@@ -1,5 +1,6 @@
-import React, { useContext } from "react";
-import { ShopContext } from "../context/ShopContext";
+import { useContext } from "react";
+import PropTypes from "prop-types";
+import { ShopContext } from "../context/ShopContextCore";
 import { Link } from "react-router-dom";
 
 const FavoritesMenu = ({ onClose }) => {
@@ -18,22 +19,37 @@ const FavoritesMenu = ({ onClose }) => {
             </span>
           )}
         </span>
-        <button onClick={onClose} className="text-gray-500 hover:text-red-500 text-xl">✕</button>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-red-500 text-xl"
+        >
+          ✕
+        </button>
       </div>
       {favorites.length === 0 ? (
-        <div className="p-4 text-center text-gray-500 dark:text-gray-300">لا توجد منتجات مفضلة بعد.</div>
+        <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+          لا توجد منتجات مفضلة بعد.
+        </div>
       ) : (
         <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
           {latestFavorites.map((item) => (
             <div key={item.product_id} className="flex items-center gap-3 p-3">
               <img
-                src={Array.isArray(item.image) ? item.image[0] : item.image || "/path/to/placeholder-image.jpg"}
+                src={
+                  Array.isArray(item.image)
+                    ? item.image[0]
+                    : item.image || "/path/to/placeholder-image.jpg"
+                }
                 alt={item.name}
                 className="w-16 h-16 rounded object-cover border shadow-sm"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">{item.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-300">{item.price} EGP</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">
+                  {item.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-300">
+                  {item.price} EGP
+                </p>
               </div>
               <button
                 onClick={() => removeFromFavorites(item.product_id)}
@@ -47,7 +63,11 @@ const FavoritesMenu = ({ onClose }) => {
         </div>
       )}
       <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-center">
-        <Link to="/favorites" className="text-green-700 font-semibold hover:underline" onClick={onClose}>
+        <Link
+          to="/favorites"
+          className="text-green-700 font-semibold hover:underline"
+          onClick={onClose}
+        >
           عرض كل المفضلة
         </Link>
       </div>
@@ -55,4 +75,8 @@ const FavoritesMenu = ({ onClose }) => {
   );
 };
 
-export default FavoritesMenu; 
+export default FavoritesMenu;
+
+FavoritesMenu.propTypes = {
+  onClose: PropTypes.func,
+};

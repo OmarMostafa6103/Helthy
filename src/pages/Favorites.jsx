@@ -1,5 +1,5 @@
-import React, { useContext } from "react";
-import { ShopContext } from "../context/ShopContext";
+import { useContext } from "react";
+import { ShopContext } from "../context/ShopContextCore";
 import ProductItem from "../components/ProductItem";
 
 const Favorites = () => {
@@ -28,4 +28,4 @@ const Favorites = () => {
   );
 };
 
-export default Favorites; 
+export default Favorites;

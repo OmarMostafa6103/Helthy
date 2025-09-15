@@ -2,15 +2,14 @@
 //? ========= START API ===========
 //? ========= START API ===========
 
-import React, { useContext, useState, useEffect, useRef } from 'react';
-import { assets } from '../assets/assets';
-import { FaHeart, FaSearch, FaShoppingCart, FaBars, FaChevronDown } from 'react-icons/fa';
-import { Link, NavLink } from 'react-router-dom';
-import { ShopContext } from '../context/ShopContext';
-import Togglemode from './Tooglemode';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { backendUrl } from '../App';
+import { useContext, useState, useEffect, useRef } from "react";
+import { assets } from "../assets/assets";
+import { Link, NavLink } from "react-router-dom";
+import { ShopContext } from "../context/ShopContextCore";
+import Togglemode from "./Tooglemode";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { backendUrl } from "../config";
 import FavoritesMenu from "./FavoritesMenu";
 
 const Navbar = () => {
@@ -18,11 +17,24 @@ const Navbar = () => {
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [cartModalVisible, setCartModalVisible] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [loadingItems, setLoadingItems] = useState({});
   const [isLoadingCart, setIsLoadingCart] = useState(false);
   const [showFavoritesMenu, setShowFavoritesMenu] = useState(false);
-  const { products, setShowSearch, getCartCount, isLoggedIn, userData, logout, navigate, currency, cartData, cartTotalPrice, showCart, removeFromCart } = useContext(ShopContext);
+  const {
+    products,
+    setShowSearch,
+    getCartCount,
+    isLoggedIn,
+    userData,
+    logout,
+    navigate,
+    currency,
+    cartData,
+    cartTotalPrice,
+    showCart,
+    removeFromCart,
+  } = useContext(ShopContext);
   const profileModalRef = useRef(null);
   const profileIconRef = useRef(null);
   const searchModalRef = useRef(null);
@@ -30,12 +42,12 @@ const Navbar = () => {
 
   useEffect(() => {
     if (cartModalVisible || searchModalVisible) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     }
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, [cartModalVisible, searchModalVisible]);
 
@@ -57,8 +69,9 @@ const Navbar = () => {
       await showCart();
       setCartModalVisible((prev) => !prev);
     } catch (error) {
-      toast.error('فشل في تحميل السلة، حاول مرة أخرى!', {
-        style: { background: 'red', color: 'white' },
+      console.error("Error loading cart:", error);
+      toast.error("فشل في تحميل السلة، حاول مرة أخرى!", {
+        style: { background: "red", color: "white" },
       });
     } finally {
       setIsLoadingCart(false);
@@ -68,7 +81,7 @@ const Navbar = () => {
   const handleCloseSearch = () => {
     setSearchModalVisible(false);
     setShowSearch(false);
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   const handleCloseCart = () => {
@@ -91,7 +104,7 @@ const Navbar = () => {
       ) {
         setSearchModalVisible(false);
         setShowSearch(false);
-        setSearchTerm('');
+        setSearchTerm("");
       }
       if (
         cartModalRef.current &&
@@ -102,13 +115,18 @@ const Navbar = () => {
     };
 
     if (profileModalVisible || searchModalVisible || cartModalVisible) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [profileModalVisible, searchModalVisible, cartModalVisible, setShowSearch]);
+  }, [
+    profileModalVisible,
+    searchModalVisible,
+    cartModalVisible,
+    setShowSearch,
+  ]);
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -116,7 +134,7 @@ const Navbar = () => {
 
   const handleProductClick = (productId) => {
     setSearchModalVisible(false);
-    setSearchTerm('');
+    setSearchTerm("");
     setShowSearch(false);
     navigate(`/product/${productId}`);
   };
@@ -128,18 +146,23 @@ const Navbar = () => {
     try {
       const cartItem = cartData.find((item) => item.item_id === itemId);
       if (!cartItem) {
-        throw new Error('العنصر غير موجود في السلة');
+        throw new Error("العنصر غير موجود في السلة");
       }
-      const product = products.find((p) => p.product_id === cartItem.product_id);
+      const product = products.find(
+        (p) => p.product_id === cartItem.product_id
+      );
       if (!product) {
-        throw new Error('المنتج غير موجود');
+        throw new Error("المنتج غير موجود");
       }
 
       const availableQuantity = product.quantity || 0;
       if (quantity > availableQuantity) {
-        toast.error(`لا يمكن تحديد أكثر من ${availableQuantity} وحدة من هذا المنتج!`, {
-          style: { background: 'red', color: 'white' },
-        });
+        toast.error(
+          `لا يمكن تحديد أكثر من ${availableQuantity} وحدة من هذا المنتج!`,
+          {
+            style: { background: "red", color: "white" },
+          }
+        );
         return;
       }
 
@@ -147,7 +170,7 @@ const Navbar = () => {
         quantity = 0;
       }
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await axios.put(
         `${backendUrl}/api/cart?_method=PUT`,
         {
@@ -160,25 +183,28 @@ const Navbar = () => {
 
       if (response.data.status === 200) {
         await showCart(); // سيقوم بتحديث cartTotalPrice
-        toast.success('تم تحديث الكمية بنجاح!', {
-          style: { background: 'green', color: 'white' },
+        toast.success("تم تحديث الكمية بنجاح!", {
+          style: { background: "green", color: "white" },
         });
       } else {
-        throw new Error(response.data.message || 'فشل في تحديث الكمية');
+        throw new Error(response.data.message || "فشل في تحديث الكمية");
       }
     } catch (error) {
-      toast.error(error.message || 'فشل في تحديث الكمية', {
-        style: { background: 'red', color: 'white' },
+      toast.error(error.message || "فشل في تحديث الكمية", {
+        style: { background: "red", color: "white" },
       });
     } finally {
       setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
-  const shippingFees = 100.00;
+  const shippingFees = 100.0;
 
   return (
-    <div id="homepage" className="flex items-center justify-between py-5 lg:py-9 font-medium">
+    <div
+      id="homepage"
+      className="flex items-center justify-between py-5 lg:py-9 font-medium"
+    >
       <Link to="/">
         <h1 className="text-2xl font-bold">
           Luna<span className="text-sm">Helthy</span>
@@ -209,9 +235,12 @@ const Navbar = () => {
 
       <div className="flex items-center gap-3 md:gap-5 lg:gap-6">
         <div className="relative">
-          <button onClick={handleSearchClick} aria-label="Search" className="w-7 cursor-pointer text-gray-700 dark:text-white">
-            <FaSearch className="w-6 h-6" />
-          </button>
+          <img
+            onClick={handleSearchClick}
+            src={assets.search_icon}
+            alt="Search Icon"
+            className="w-7 cursor-pointer"
+          />
           {searchModalVisible && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div
@@ -267,7 +296,9 @@ const Navbar = () => {
                             src={product.image[0] || assets.default_image}
                             alt={product.name}
                             className="w-14 h-14 rounded-md object-cover shadow-sm"
-                            onError={(e) => (e.target.src = assets.default_image)}
+                            onError={(e) =>
+                              (e.target.src = assets.default_image)
+                            }
                           />
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-800 dark:text-white">
@@ -292,11 +323,14 @@ const Navbar = () => {
         </div>
 
         <div className="relative">
-          <button onClick={handleCartClick} aria-label="Cart" className="w-7 min-w-5 cursor-pointer text-gray-700 dark:text-white">
-            <FaShoppingCart className="w-6 h-6" />
-          </button>
+          <img
+            onClick={handleCartClick}
+            src={assets.cart_icon}
+            alt="Cart Icon"
+            className="w-7 min-w-5 cursor-pointer"
+          />
           <p className="absolute right-[-5px] bottom-[-7px] bg-white text-black w-5 text-center rounded-full text-[12px]">
-            {isLoadingCart ? '...' : getCartCount()}
+            {isLoadingCart ? "..." : getCartCount()}
           </p>
 
           {cartModalVisible && (
@@ -345,18 +379,25 @@ const Navbar = () => {
                           >
                             <img
                               src={item.image || assets.default_image}
-                              alt={item.product_name || 'Product'}
+                              alt={item.product_name || "Product"}
                               className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-cover"
-                              onError={(e) => (e.target.src = assets.default_image)}
+                              onError={(e) =>
+                                (e.target.src = assets.default_image)
+                              }
                             />
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-800 dark:text-white">
-                                {item.product_name || 'Unnamed Product'}
+                                {item.product_name || "Unnamed Product"}
                               </p>
                               <div className="flex justify-between items-center mt-1">
                                 <div className="flex items-center gap-2">
                                   <button
-                                    onClick={() => handleUpdateQuantity(item.item_id, item.quantity - 1)}
+                                    onClick={() =>
+                                      handleUpdateQuantity(
+                                        item.item_id,
+                                        item.quantity - 1
+                                      )
+                                    }
                                     className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white"
                                     disabled={loadingItems[item.item_id]}
                                   >
@@ -370,7 +411,12 @@ const Navbar = () => {
                                     )}
                                   </span>
                                   <button
-                                    onClick={() => handleUpdateQuantity(item.item_id, item.quantity + 1)}
+                                    onClick={() =>
+                                      handleUpdateQuantity(
+                                        item.item_id,
+                                        item.quantity + 1
+                                      )
+                                    }
                                     className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white"
                                     disabled={loadingItems[item.item_id]}
                                   >
@@ -408,7 +454,8 @@ const Navbar = () => {
                       <div className="absolute bottom-20 left-0 right-0 bg-white dark:bg-[#1a2338] pt-4 pb-2 px-4 sm:px-6 border-t border-gray-200 dark:border-gray-600">
                         <div className="flex justify-between text-sm font-medium text-gray-800 dark:text-white">
                           <p>Subtotal:</p>
-                          <p>{cartTotalPrice.toFixed(2)} EGP</p> {/* استخدام cartTotalPrice */}
+                          <p>{cartTotalPrice.toFixed(2)} EGP</p>{" "}
+                          {/* استخدام cartTotalPrice */}
                         </div>
                         {shippingFees > 0 && (
                           <div className="flex justify-between text-sm font-medium text-gray-800 dark:text-white mt-1">
@@ -418,7 +465,10 @@ const Navbar = () => {
                         )}
                         <div className="flex justify-between text-base font-semibold text-gray-800 dark:text-white mt-2">
                           <p>Total:</p>
-                          <p>{(cartTotalPrice + shippingFees).toFixed(2)} EGP</p> {/* استخدام cartTotalPrice */}
+                          <p>
+                            {(cartTotalPrice + shippingFees).toFixed(2)} EGP
+                          </p>{" "}
+                          {/* استخدام cartTotalPrice */}
                         </div>
                       </div>
                       <div className="absolute bottom-4 left-0 right-0 px-4 sm:px-6">
@@ -426,7 +476,7 @@ const Navbar = () => {
                           <button
                             onClick={() => {
                               handleCloseCart();
-                              navigate('/cart');
+                              navigate("/cart");
                             }}
                             className="w-[30%] bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-200"
                           >
@@ -435,7 +485,7 @@ const Navbar = () => {
                           <button
                             onClick={() => {
                               handleCloseCart();
-                              navigate('/place-order');
+                              navigate("/place-order");
                             }}
                             className="w-[70%] bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
                             disabled={cartData.length === 0}
@@ -461,9 +511,8 @@ const Navbar = () => {
             onClick={() => setShowFavoritesMenu((prev) => !prev)}
             className="w-7 h-7 flex items-center justify-center text-pink-600 hover:text-pink-800 text-2xl focus:outline-none"
             title="المفضلة"
-            aria-label="Favorites"
           >
-            <FaHeart className="w-5 h-5" />
+            ❤️
           </button>
           {showFavoritesMenu && (
             <FavoritesMenu onClose={() => setShowFavoritesMenu(false)} />
@@ -496,16 +545,16 @@ const Navbar = () => {
                   />
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                      {userData?.firstName || 'Guest'} {userData?.lastName || ''}
+                      {userData?.firstName || "Guest"}{" "}
+                      {userData?.lastName || ""}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-300">
-                      {userData?.email || 'No email provided'}
+                      {userData?.email || "No email provided"}
                     </p>
                   </div>
                 </div>
                 <hr className="border-gray-200 dark:border-gray-600 mb-4" />
                 <div className="flex flex-col gap-2">
-
                   <Link
                     to="/profile"
                     onClick={() => setProfileModalVisible(false)}
@@ -543,42 +592,76 @@ const Navbar = () => {
           </Link>
         )}
 
-        <button onClick={() => setVisible(true)} aria-label="Open menu" className="w-5 cursor-pointer lg:hidden md:block text-gray-700 dark:text-white">
-          <FaBars className="w-5 h-5" />
-        </button>
+        <img
+          onClick={() => setVisible(true)}
+          src={assets.menu_icon}
+          alt="Menu Icon"
+          className="w-5 cursor-pointer lg:hidden md:block"
+        />
       </div>
 
       {visible && (
-        <div
-          className="fixed inset-0 bg-white dark:bg-[#1a2338] z-50 flex flex-col text-gray-600 dark:text-gray-300 transition-all duration-300"
-        >
+        <div className="fixed inset-0 bg-white dark:bg-[#1a2338] z-50 flex flex-col text-gray-600 dark:text-gray-300 transition-all duration-300">
           <div className="flex flex-col h-full">
-            <div onClick={() => setVisible(false)} className="flex items-center gap-4 p-3 border-b border-gray-200 dark:border-gray-600">
-              <FaChevronDown className="h-4 rotate-180 text-gray-700 dark:text-white" aria-hidden />
+            <div
+              onClick={() => setVisible(false)}
+              className="flex items-center gap-4 p-3 border-b border-gray-200 dark:border-gray-600"
+            >
+              <img
+                src={assets.dropdown_icon}
+                alt="Back Icon"
+                className="h-4 rotate-180"
+              />
               <p>Back</p>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <NavLink onClick={() => setVisible(false)} className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block" to="/">
+              <NavLink
+                onClick={() => setVisible(false)}
+                className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
+                to="/"
+              >
                 Home
               </NavLink>
-              <NavLink onClick={() => setVisible(false)} className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block" to="/collection">
+              <NavLink
+                onClick={() => setVisible(false)}
+                className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
+                to="/collection"
+              >
                 Collection
               </NavLink>
-              <NavLink onClick={() => setVisible(false)} className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block" to="/about">
+              <NavLink
+                onClick={() => setVisible(false)}
+                className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
+                to="/about"
+              >
                 About
               </NavLink>
-              <NavLink onClick={() => setVisible(false)} className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block" to="/contact">
+              <NavLink
+                onClick={() => setVisible(false)}
+                className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
+                to="/contact"
+              >
                 Contact
               </NavLink>
-              <NavLink onClick={() => setVisible(false)} className="py-6 pl-6 border-b border-gray-600 dark:border-grey-600 block" to="/orders">
+              <NavLink
+                onClick={() => setVisible(false)}
+                className="py-6 pl-6 border-b border-gray-600 dark:border-grey-600 block"
+                to="/orders"
+              >
                 Orders
               </NavLink>
-              <NavLink onClick={() => setVisible(false)} className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block" to="/profile">
+              <NavLink
+                onClick={() => setVisible(false)}
+                className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
+                to="/profile"
+              >
                 Profile
               </NavLink>
               {isLoggedIn ? (
                 <div className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600">
-                  <p className="text-md">Welcome, {userData?.firstName || 'Guest'}</p>
+                  <p className="text-md">
+                    Welcome, {userData?.firstName || "Guest"}
+                  </p>
                   <button
                     onClick={() => {
                       logout();
@@ -590,7 +673,10 @@ const Navbar = () => {
                   </button>
                 </div>
               ) : (
-                <Link className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block" to="/login">
+                <Link
+                  className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
+                  to="/login"
+                >
                   <button className="text-md border-2 hover:bg-green-300 hover:text-black border-gray-600 px-4 py-2 rounded-md bg-green-500">
                     Sign In
                   </button>
@@ -609,12 +695,3 @@ export default Navbar;
 //? ========= end API ===========
 //? ========= end API ===========
 //? ========= end API ===========
-
-
-
-
-
-
-
-
-

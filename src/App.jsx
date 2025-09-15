@@ -1,4 +1,4 @@
-import React from "react";
+// React import not needed with the new JSX transform
 import { Routes, Route, Navigate } from "react-router-dom";
 import ShopContextProvider from "./context/ShopContext";
 import { ToastContainer } from "react-toastify";
@@ -18,8 +18,6 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProfilePage from "./components/ProfilePage";
 import Favorites from "./pages/Favorites";
-
-export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const App = () => {
   return (
