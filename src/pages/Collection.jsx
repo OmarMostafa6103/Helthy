@@ -5,6 +5,7 @@ import ProductItem from "../components/ProductItem";
 import { assets } from "../assets/assets";
 import axios from "axios";
 import { backendUrl } from "../App";
+import { FaChevronDown } from 'react-icons/fa';
 
 const Collection = () => {
   const {
@@ -258,11 +259,7 @@ const Collection = () => {
           className="my-2 text-xl flex items-center cursor-pointer gap-2"
         >
           فلاتر
-          <img
-            src={assets.dropdown_icon}
-            alt=""
-            className={`h-3 md:hidden ${showFilter ? "rotate-90" : ""}`}
-          />
+          <FaChevronDown className={`h-3 md:hidden ${showFilter ? "rotate-90" : ""} text-gray-700 dark:text-white`} aria-hidden />
         </p>
 
         <div

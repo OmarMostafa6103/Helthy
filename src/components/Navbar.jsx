@@ -4,6 +4,7 @@
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { assets } from '../assets/assets';
+import { FaHeart, FaSearch, FaShoppingCart, FaBars, FaChevronDown } from 'react-icons/fa';
 import { Link, NavLink } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
 import Togglemode from './Tooglemode';
@@ -208,12 +209,9 @@ const Navbar = () => {
 
       <div className="flex items-center gap-3 md:gap-5 lg:gap-6">
         <div className="relative">
-          <img
-            onClick={handleSearchClick}
-            src={assets.search_icon}
-            alt="Search Icon"
-            className="w-7 cursor-pointer"
-          />
+          <button onClick={handleSearchClick} aria-label="Search" className="w-7 cursor-pointer text-gray-700 dark:text-white">
+            <FaSearch className="w-6 h-6" />
+          </button>
           {searchModalVisible && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div
@@ -294,12 +292,9 @@ const Navbar = () => {
         </div>
 
         <div className="relative">
-          <img
-            onClick={handleCartClick}
-            src={assets.cart_icon}
-            alt="Cart Icon"
-            className="w-7 min-w-5 cursor-pointer"
-          />
+          <button onClick={handleCartClick} aria-label="Cart" className="w-7 min-w-5 cursor-pointer text-gray-700 dark:text-white">
+            <FaShoppingCart className="w-6 h-6" />
+          </button>
           <p className="absolute right-[-5px] bottom-[-7px] bg-white text-black w-5 text-center rounded-full text-[12px]">
             {isLoadingCart ? '...' : getCartCount()}
           </p>
@@ -466,8 +461,9 @@ const Navbar = () => {
             onClick={() => setShowFavoritesMenu((prev) => !prev)}
             className="w-7 h-7 flex items-center justify-center text-pink-600 hover:text-pink-800 text-2xl focus:outline-none"
             title="المفضلة"
+            aria-label="Favorites"
           >
-            ❤️
+            <FaHeart className="w-5 h-5" />
           </button>
           {showFavoritesMenu && (
             <FavoritesMenu onClose={() => setShowFavoritesMenu(false)} />
@@ -547,12 +543,9 @@ const Navbar = () => {
           </Link>
         )}
 
-        <img
-          onClick={() => setVisible(true)}
-          src={assets.menu_icon}
-          alt="Menu Icon"
-          className="w-5 cursor-pointer lg:hidden md:block"
-        />
+        <button onClick={() => setVisible(true)} aria-label="Open menu" className="w-5 cursor-pointer lg:hidden md:block text-gray-700 dark:text-white">
+          <FaBars className="w-5 h-5" />
+        </button>
       </div>
 
       {visible && (
@@ -561,7 +554,7 @@ const Navbar = () => {
         >
           <div className="flex flex-col h-full">
             <div onClick={() => setVisible(false)} className="flex items-center gap-4 p-3 border-b border-gray-200 dark:border-gray-600">
-              <img src={assets.dropdown_icon} alt="Back Icon" className="h-4 rotate-180" />
+              <FaChevronDown className="h-4 rotate-180 text-gray-700 dark:text-white" aria-hidden />
               <p>Back</p>
             </div>
             <div className="flex-1 overflow-y-auto">
