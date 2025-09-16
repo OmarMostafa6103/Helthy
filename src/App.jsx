@@ -18,15 +18,18 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProfilePage from "./components/ProfilePage";
 import Favorites from "./pages/Favorites";
+import GlobalLoader from "./components/GlobalLoader";
+import "./i18n";
 
 const App = () => {
   return (
     <ShopContextProvider>
-      <div className="min-h-screen px-8 flex flex-col bg-[#ffffff] text-gray-600 dark:bg-[#0c0e1d] dark:text-white">
+      <div className="min-h-screen px-2 flex flex-col bg-[#ffffff] text-gray-600 dark:bg-[#0c0e1d] dark:text-white">
         <ToastContainer />
         <Navbar />
+        <GlobalLoader />
 
-        <main className="flex-1 px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
+        <main className="flex-1 px-0 sm:px-[2vw] md:px-[4vw] lg:px-[6vw]">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/collection" element={<Collection />} />

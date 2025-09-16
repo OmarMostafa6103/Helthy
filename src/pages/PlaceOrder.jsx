@@ -479,6 +479,7 @@
 // !================ START STRIPE =================
 
 import { useContext, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Title from "../components/Title";
 import { ShopContext } from "../context/ShopContextCore";
 import { toast } from "react-toastify";
@@ -532,13 +533,14 @@ const CheckoutForm = ({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [cardError, setCardError] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     console.log("CheckoutForm - Stripe:", !!stripe, "Elements:", !!elements);
     if (!stripe || !elements) {
-      toast.error("نظام الدفع غير متاح حاليًا. يرجى المحاولة لاحقًا.");
+      toast.error(t("placeOrder.payment_unavailable"));
     }
-  }, [stripe, elements]);
+  }, [stripe, elements, t]);
 
   const handlePayment = async () => {
     if (!stripe || !elements) {
@@ -568,7 +570,7 @@ const CheckoutForm = ({
       console.log("Payment API full response:", response.data);
       const { clientSecret } = response.data;
       if (!clientSecret) {
-        throw new Error("فشل في الحصول على client_secret من الخادم");
+        throw new Error(t("placeOrder.missing_client_secret"));
       }
       console.log("Received clientSecret:", clientSecret);
 
@@ -578,10 +580,14 @@ const CheckoutForm = ({
 
       if (result.error) {
         console.error("Payment failed:", result.error);
-        toast.error(`فشل الدفع: ${result.error.message}`);
+        toast.error(
+          t("placeOrder.payment_failed_with_reason", {
+            message: result.error.message,
+          })
+        );
       } else if (result.paymentIntent.status === "succeeded") {
         console.log("Payment succeeded:", result.paymentIntent);
-        toast.success("تم الدفع بنجاح!");
+        toast.success(t("placeOrder.payment_success"));
         await axios.post(
           `${backendUrl}/api/order/confirm`,
           {
@@ -596,7 +602,9 @@ const CheckoutForm = ({
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(
-        `فشل إتمام الدفع: ${error.response?.data?.message || error.message}`
+        t("placeOrder.payment_failed_with_reason", {
+          message: error.response?.data?.message || error.message,
+        })
       );
     } finally {
       setIsProcessing(false);
@@ -614,14 +622,16 @@ const CheckoutForm = ({
   if (!stripe || !elements) {
     return (
       <div className="text-center text-red-500 dark:text-red-400">
-        جاري تحميل نظام الدفع...
+        {t("placeOrder.payment_loading")}
       </div>
     );
   }
 
   return (
     <div className="space-y-6" aria-hidden={false}>
-      <h2 className="text-xl font-bold dark:text-white">أدخل بيانات البطاقة</h2>
+      <h2 className="text-xl font-bold dark:text-white">
+        {t("placeOrder.enter_card_details")}
+      </h2>
       <div>
         <CardElement
           options={{
@@ -657,7 +667,7 @@ const CheckoutForm = ({
               : "hover:bg-green-800"
           }`}
         >
-          {isProcessing ? "جاري المعالجة..." : "إتمام الدفع"}
+          {isProcessing ? t("placeOrder.processing") : t("placeOrder.pay_now")}
         </button>
       </div>
     </div>
@@ -677,8 +687,9 @@ CheckoutForm.propTypes = {
 };
 
 const PlaceOrder = () => {
+  const { t } = useTranslation();
   const [method, setMethod] = useState("cod");
-  const [orderType, setOrderType] = useState("عادي");
+  const [orderType, setOrderType] = useState("regular");
   const [showPromoInput, setShowPromoInput] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -691,7 +702,6 @@ const PlaceOrder = () => {
     cartData,
     currency,
     userData,
-    updateQuantity,
     cartTotalPrice,
   } = useContext(ShopContext);
 
@@ -713,14 +723,14 @@ const PlaceOrder = () => {
 
     if (!isLoggedIn) {
       console.log("User not logged in");
-      toast.error("يرجى تسجيل الدخول أولاً.");
+      toast.error(t("placeOrder.errors.login_required"));
       navigate("/login");
       return;
     }
 
     if (cartData.length === 0) {
       console.log("Cart is empty");
-      toast.error("سلة التسوق فارغة. أضف منتجات أولاً.");
+      toast.error(t("placeOrder.errors.cart_empty"));
       return;
     }
 
@@ -775,7 +785,7 @@ const PlaceOrder = () => {
           setShowPaymentForm(true);
         } else {
           console.log("Order completed without payment form");
-          toast.success("تم إتمام الطلب بنجاح!");
+          toast.success(t("placeOrder.success.order_created"));
           resetCart();
           navigate("/orders");
         }
@@ -785,13 +795,15 @@ const PlaceOrder = () => {
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       if (error.response?.status === 401 || error.response?.status === 422) {
-        toast.error("انتهت جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.");
+        toast.error(t("placeOrder.errors.session_expired"));
         localStorage.removeItem("token");
         localStorage.removeItem("userData");
         navigate("/login");
       } else {
         toast.error(
-          `فشل إتمام الطلب: ${error.response?.data?.message || error.message}`
+          t("placeOrder.errors.order_failed_with_reason", {
+            message: error.response?.data?.message || error.message,
+          })
         );
       }
     } finally {
@@ -801,9 +813,9 @@ const PlaceOrder = () => {
 
   const applyPromoCode = () => {
     if (promoCode.trim()) {
-      toast.success(`تم تطبيق كود الخصم: ${promoCode}`);
+      toast.success(t("placeOrder.promo.applied", { code: promoCode }));
     } else {
-      toast.error("يرجى إدخال كود خصم صالح");
+      toast.error(t("placeOrder.promo.invalid"));
     }
   };
 
@@ -811,15 +823,7 @@ const PlaceOrder = () => {
     navigate("/cart");
   };
 
-  const handleRemoveItem = async (itemId) => {
-    try {
-      await updateQuantity(itemId, 0, true);
-      toast.success("تم إزالة المنتج من السلة");
-    } catch (error) {
-      console.error("Error removing item:", error);
-      toast.error("فشل إزالة المنتج من السلة");
-    }
-  };
+  // remove item handler intentionally removed (UI remove button is commented out)
 
   const handleBackToForm = () => {
     setShowPaymentForm(false);
@@ -827,7 +831,7 @@ const PlaceOrder = () => {
 
   const subtotal = cartTotalPrice;
   const shippingFee = 100.0;
-  const giftWrappingFee = orderType === "إهداء" ? 10.0 : 0.0;
+  const giftWrappingFee = orderType === "gift" ? 10.0 : 0.0;
   const totalAmount = subtotal + shippingFee + giftWrappingFee;
 
   return (
@@ -838,35 +842,40 @@ const PlaceOrder = () => {
           className="space-y-8 bg-white dark:bg-[#1a2338] p-6 rounded-xl shadow-lg lg:order-2 order-1"
         >
           <div className="text-xl sm:text-2xl my-3">
-            <Title text1={"معلومات"} text2={"التوصيل"} />
+            <Title
+              text1={t("placeOrder.title.part1")}
+              text2={t("placeOrder.title.part2")}
+            />
           </div>
 
           <div className="space-y-4">
             <h2 className="text-xl font-bold border-b pb-2 dark:border-gray-600 dark:text-white">
-              بيانات العميل
+              {t("placeOrder.sections.customer_info")}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
-                  الاسم الأول <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.first_name.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="firstName"
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="أدخل الاسم الأول"
+                  placeholder={t("placeOrder.fields.first_name.placeholder")}
                   required
                 />
               </div>
               <div>
                 <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
-                  الاسم الأخير <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.last_name.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="lastName"
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="أدخل الاسم الأخير"
+                  placeholder={t("placeOrder.fields.last_name.placeholder")}
                   required
                 />
               </div>
@@ -874,25 +883,27 @@ const PlaceOrder = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
-                  رقم الهاتف <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.phone.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="phone"
                   type="tel"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="مثال: +201234567890"
+                  placeholder={t("placeOrder.fields.phone.placeholder")}
                   required
                 />
               </div>
               <div>
                 <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
-                  البريد الإلكتروني <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.email.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="email"
                   type="email"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="أدخل البريد الإلكتروني"
+                  placeholder={t("placeOrder.fields.email.placeholder")}
                   required
                 />
               </div>
@@ -901,7 +912,7 @@ const PlaceOrder = () => {
 
           <div className="space-y-4">
             <h2 className="text-xl font-bold border-b pb-2 dark:border-gray-600 dark:text-white">
-              نوع الطلب
+              {t("placeOrder.sections.order_type")}
             </h2>
             <div className="flex gap-4">
               <button
@@ -913,7 +924,7 @@ const PlaceOrder = () => {
                     : "border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
-                إهداء الطلب
+                {t("placeOrder.order_types.gift")}
                 {orderType === "إهداء" && (
                   <span className="flex items-center justify-center w-5 h-5 bg-green-800 text-white rounded-full">
                     ✓
@@ -929,7 +940,7 @@ const PlaceOrder = () => {
                     : "border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
-                طلب عادي
+                {t("placeOrder.order_types.regular")}
                 {orderType === "عادي" && (
                   <span className="flex items-center justify-center w-5 h-5 bg-green-800 text-white rounded-full">
                     ✓
@@ -939,7 +950,10 @@ const PlaceOrder = () => {
             </div>
             {orderType === "إهداء" && (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                رسوم تغليف الهدايا: {currency} 10.00
+                {t("placeOrder.gift.wrapping_fee", {
+                  currency,
+                  amount: "10.00",
+                })}
               </p>
             )}
           </div>
@@ -947,30 +961,36 @@ const PlaceOrder = () => {
           {orderType === "إهداء" && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold border-b pb-2 dark:border-gray-600 dark:text-white">
-                بيانات مستلم الهدية
+                {t("placeOrder.sections.recipient_info")}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
-                    اسم المستلم <span className="text-red-500">*</span>
+                    {t("placeOrder.fields.recipient_name.label")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     name="recipientName"
                     type="text"
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                    placeholder="اسم مستلم الهدية"
+                    placeholder={t(
+                      "placeOrder.fields.recipient_name.placeholder"
+                    )}
                     required
                   />
                 </div>
                 <div>
                   <label className="mb-1 font-medium flex items-center gap-2 dark:text-white">
-                    رقم هاتف المستلم <span className="text-red-500">*</span>
+                    {t("placeOrder.fields.recipient_phone.label")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     name="recipientPhone"
                     type="tel"
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                    placeholder="رقم هاتف المستلم"
+                    placeholder={t(
+                      "placeOrder.fields.recipient_phone.placeholder"
+                    )}
                     required
                   />
                 </div>
@@ -980,67 +1000,72 @@ const PlaceOrder = () => {
 
           <div className="space-y-4">
             <h2 className="text-xl font-bold border-b pb-2 dark:border-gray-600 dark:text-white">
-              عنوان التوصيل
+              {t("placeOrder.sections.delivery_address")}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-1 font-medium dark:text-white">
-                  المدينة <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.city.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="city"
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="أدخل اسم المدينة"
+                  placeholder={t("placeOrder.fields.city.placeholder")}
                   required
                 />
               </div>
               <div>
                 <label className="block mb-1 font-medium dark:text-white">
-                  المحافظة <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.state.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="state"
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="أدخل اسم المحافظة"
+                  placeholder={t("placeOrder.fields.state.placeholder")}
                   required
                 />
               </div>
             </div>
             <div>
               <label className="block mb-1 font-medium dark:text-white">
-                العنوان الكامل <span className="text-red-500">*</span>
+                {t("placeOrder.fields.address.label")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <textarea
                 name="address"
                 className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 h-24 focus:ring-2 focus:ring-green-600"
-                placeholder="أدخل العنوان الكامل"
+                placeholder={t("placeOrder.fields.address.placeholder")}
                 required
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-1 font-medium dark:text-white">
-                  الرمز البريدي <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.zipcode.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="zipcode"
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="أدخل الرمز البريدي"
+                  placeholder={t("placeOrder.fields.zipcode.placeholder")}
                   required
                 />
               </div>
               <div>
                 <label className="block mb-1 font-medium dark:text-white">
-                  الدولة <span className="text-red-500">*</span>
+                  {t("placeOrder.fields.country.label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="country"
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600"
-                  placeholder="أدخل اسم الدولة"
+                  placeholder={t("placeOrder.fields.country.placeholder")}
                   required
                 />
               </div>
@@ -1048,7 +1073,10 @@ const PlaceOrder = () => {
           </div>
 
           <div className="space-y-4">
-            <Title text1={"طريقة"} text2={"الدفع"} />
+            <Title
+              text1={t("placeOrder.payment.title.part1")}
+              text2={t("placeOrder.payment.title.part2")}
+            />
             <div className="flex gap-3 flex-col lg:flex-row">
               {["stripe", "razorpay", "cod"].map((methodType) => (
                 <div
@@ -1067,7 +1095,7 @@ const PlaceOrder = () => {
                   />
                   <p className="text-gray-700 dark:text-gray-200 text-sm font-medium mx-4">
                     {methodType === "cod"
-                      ? "الدفع عند الاستلام"
+                      ? t("placeOrder.payment.methods.cod")
                       : methodType.toUpperCase()}
                   </p>
                 </div>
@@ -1085,19 +1113,24 @@ const PlaceOrder = () => {
                   : "hover:bg-green-800"
               }`}
             >
-              {isLoading ? "جاري المعالجة..." : "أكمل إلى الدفع"}
+              {isLoading
+                ? t("placeOrder.processing")
+                : t("placeOrder.proceed_to_payment")}
             </button>
           </div>
         </form>
       ) : (
         <div className="space-y-8 bg-white dark:bg-[#1a2338] p-6 rounded-xl shadow-lg lg:order-2 order-1">
           <div className="flex items-center justify-between">
-            <Title text1={"إتمام"} text2={"الدفع"} />
+            <Title
+              text1={t("placeOrder.payment_finish.part1")}
+              text2={t("placeOrder.payment_finish.part2")}
+            />
             <button
               onClick={handleBackToForm}
               className="text-gray-600 dark:text-gray-300 hover:text-green-800 dark:hover:text-green-500 font-medium"
             >
-              رجوع
+              {t("placeOrder.actions.back")}
             </button>
           </div>
           <Elements stripe={stripePromise}>
@@ -1115,19 +1148,22 @@ const PlaceOrder = () => {
 
       <div className="bg-white dark:bg-[#1a2338] rounded-xl shadow-lg p-6 lg:order-1 order-2 max-h-[500px] flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold dark:text-white">ملخص السلة</h2>
+          <h2 className="text-xl font-bold dark:text-white">
+            {t("placeOrder.cart.title")}
+          </h2>
           <button
             onClick={handleEditCart}
             className="border border-gray-300 dark:border-gray-600 px-4 py-1 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white transition"
           >
-            تعديل
+            {t("placeOrder.actions.edit_cart")}
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto border-t pt-4 space-y-4 dark:border-gray-600">
           {cartData.length > 0 ? (
             cartData.map((item) => {
-              const price = parseFloat(item.product_price) || 0;
+              const unitPrice = parseFloat(item.product_price || item.price) || 0;
+              const lineTotal = unitPrice * (item.quantity || 1);
               return (
                 <div
                   key={item.item_id}
@@ -1148,27 +1184,27 @@ const PlaceOrder = () => {
                         {item.product_name}
                       </div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs">
-                        العدد: {item.quantity}
+                        العدد: {item.quantity} · {currency} {unitPrice.toFixed(2)} لكل
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="bg-yellow-300 text-black font-bold text-sm px-2 py-1 rounded-lg dark:bg-yellow-400">
-                      {currency} {price.toFixed(2)}
+                      {currency} {lineTotal.toFixed(2)}
                     </div>
-                    <button
+                    {/* <button
                       onClick={() => handleRemoveItem(item.item_id)}
                       className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     >
                       إزالة
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               );
             })
           ) : (
             <div className="text-center text-gray-500 dark:text-gray-400">
-              السلة فارغة
+              {t("placeOrder.cart.empty")}
             </div>
           )}
         </div>
@@ -1179,7 +1215,7 @@ const PlaceOrder = () => {
               onClick={() => setShowPromoInput(!showPromoInput)}
               className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-green-800 dark:hover:text-green-500 transition"
             >
-              هل لديك كود خصم؟
+              {t("placeOrder.promo.prompt")}
             </button>
           </div>
           {showPromoInput && (
@@ -1188,7 +1224,7 @@ const PlaceOrder = () => {
                 type="text"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
-                placeholder="أدخل كود الخصم"
+                placeholder={t("placeOrder.promo.placeholder")}
                 className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a2338] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-600"
               />
               <button
@@ -1196,32 +1232,32 @@ const PlaceOrder = () => {
                 type="button"
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition"
               >
-                تطبيق
+                {t("placeOrder.promo.apply")}
               </button>
             </div>
           )}
           <div className="flex justify-between text-gray-700 dark:text-gray-300">
-            <span>المجموع</span>
+            <span>{t("placeOrder.cart.subtotal")}</span>
             <span>
               {currency} {subtotal.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between text-gray-700 dark:text-gray-300">
-            <span>مصاريف الشحن</span>
+            <span>{t("placeOrder.cart.shipping_fee")}</span>
             <span>
               {currency} {shippingFee.toFixed(2)}
             </span>
           </div>
-          {orderType === "إهداء" && (
+          {orderType === "gift" && (
             <div className="flex justify-between text-gray-700 dark:text-gray-300">
-              <span>رسوم تغليف الهدايا</span>
+              <span>{t("placeOrder.gift.label")}</span>
               <span>
                 {currency} {giftWrappingFee.toFixed(2)}
               </span>
             </div>
           )}
           <div className="flex justify-between font-bold border-t pt-2 text-lg dark:border-gray-600 dark:text-white">
-            <span>الإجمالي</span>
+            <span>{t("placeOrder.cart.total")}</span>
             <span>
               {currency} {totalAmount.toFixed(2)}
             </span>

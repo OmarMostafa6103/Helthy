@@ -3,11 +3,13 @@
 
 import PropTypes from "prop-types";
 import { useContext, useState, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { ShopContext } from "../context/ShopContextCore";
 import { Link } from "react-router-dom";
 import ModalPortal from "./ModalPortal";
 
 const ProductItem = ({ id, image, name, price, description }) => {
+  const { t } = useTranslation();
   const {
     currency,
     addToCart,
@@ -44,10 +46,13 @@ const ProductItem = ({ id, image, name, price, description }) => {
 
   // تحقق من السعر وتنسيقه
   const displayPrice =
-    price && price > 0 ? `${currency} ${price}` : "السعر غير متاح";
+    price && price > 0
+      ? `${currency} ${price}`
+      : t("product.price_not_available");
 
   // دالة لتحديث الكمية مع إدارة حالة التحميل
   const handleUpdateQuantity = async (newQuantity) => {
+    console.debug('[ProductItem] handleUpdateQuantity called', { id, newQuantity, quantityInCart });
     setIsUpdating(true); // إظهار مؤشر التحميل
     try {
       await updateQuantity(id, newQuantity, false);
@@ -58,6 +63,7 @@ const ProductItem = ({ id, image, name, price, description }) => {
 
   // دالة لإضافة المنتج إلى السلة مع إدارة حالة التحميل
   const handleAddToCart = async () => {
+    console.debug('[ProductItem] handleAddToCart called', { id, price, quantityInCart });
     setIsUpdating(true); // إظهار مؤشر التحميل
     try {
       await addToCart(id, 1, price);
@@ -75,89 +81,117 @@ const ProductItem = ({ id, image, name, price, description }) => {
   };
 
   return (
-    <div className="relative border rounded-xl shadow-md hover:shadow-lg transition bg-white dark:bg-gray-800">
-      <Link to={`/product/${id}`} className="block">
-        <div className="relative overflow-hidden rounded-t-xl">
-          <img
-            src={images[0] || "/path/to/placeholder-image.jpg"}
-            alt={name}
-            className="w-full h-48 object-cover rounded-t-xl hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              e.target.src = "/path/to/placeholder-image.jpg";
-              e.target.onerror = null;
-            }}
-            loading="lazy"
-          />
-          <button
-            onClick={openModal}
-            className="absolute bottom-2 left-2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white hover:scale-105 transition-all duration-200 flex items-center justify-center"
-          >
-            <i className="fas fa-up-right-and-down-left-from-center text-gray-700 text-base"></i>
-          </button>
-        </div>
-        <div className="pt-3 px-4 text-right">
-          <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">
-            {name}
-          </p>
-          <p
-            className={`text-sm font-semibold mt-1 ${
-              price && price > 0
-                ? "text-yellow-600 dark:text-yellow-500"
-                : "text-gray-500"
-            }`}
-          >
-            {displayPrice}
-          </p>
-        </div>
-      </Link>
-      <div className="flex justify-between items-center mt-3 px-4 pb-4">
-        {quantityInCart > 0 ? (
-          <div className="flex items-center gap-2">
+    <div className="relative rounded-lg shadow-lg hover:shadow-xl transition-transform duration-200 bg-white dark:bg-gray-800 overflow-hidden">
+      <div className="flex flex-col h-full">
+        <Link to={`/product/${id}`} className="block">
+          <div className="relative bg-transparent">
+            <img
+              src={images[0] || "/path/to/placeholder-image.jpg"}
+              alt={name}
+              className="w-full h-48 sm:h-52 object-cover transition-transform duration-300 hover:scale-105"
+              onError={(e) => {
+                e.target.src = "/path/to/placeholder-image.jpg";
+                e.target.onerror = null;
+              }}
+              loading="lazy"
+            />
             <button
-              onClick={() => handleUpdateQuantity(quantityInCart - 1)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-              disabled={isUpdating}
+              onClick={openModal}
+              className="absolute bottom-3 left-3 bg-white/90 rounded-full p-2 shadow-sm hover:scale-105 transition-transform"
+              aria-label="Quick view"
             >
-              -
+              <i className="fas fa-up-right-and-down-left-from-center text-gray-700"></i>
             </button>
-            {isUpdating ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-green-600"></div>
-            ) : (
-              <span className="text-sm text-gray-800 dark:text-white">
-                {quantityInCart}
-              </span>
-            )}
-            <button
-              onClick={() => handleUpdateQuantity(quantityInCart + 1)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-              disabled={isUpdating}
-            >
-              +
-            </button>
+            {/* removed absolute heart overlay; favorite button will be shown inline next to Add/quantity */}
           </div>
-        ) : (
-          <button
-            onClick={handleAddToCart}
-            className="text-white bg-green-700 hover:bg-green-800 px-4 py-1.5 text-sm rounded-lg transition-colors duration-200 flex items-center justify-center"
-            disabled={isUpdating}
-          >
-            {isUpdating ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-            ) : (
-              "إضافة إلى السلة"
-            )}
-          </button>
-        )}
-        <button
-          onClick={handleFavorite}
-          className={`text-sm p-2 rounded-full transition-colors duration-200 ${
-            isFavorited
-              ? "text-pink-600 bg-pink-100"
-              : "text-gray-600 bg-gray-100"
-          } hover:bg-pink-200`}
-        >
-          {isFavorited ? "❤️" : "🤍"}
-        </button>
+        </Link>
+
+        <div className="px-2 py-2 flex-1 flex flex-col justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mb-1 text-right">
+              {name}
+            </p>
+            <p
+              className={`text-base font-semibold ${
+                price && price > 0 ? "text-yellow-600" : "text-gray-500"
+              } text-right`}
+            >
+              {displayPrice}
+            </p>
+          </div>
+
+          <div className="mt-3 relative h-10">
+            {/* favourite heart - fixed to physical left */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFavorite();
+              }}
+              className={`absolute left-2 bottom-0 p-2 rounded-full border transition-colors duration-200 flex items-center justify-center ${
+                isFavorited
+                  ? "bg-pink-50 text-pink-600 border-pink-200"
+                  : "bg-white text-gray-600 border-gray-200"
+              }`}
+              aria-label="Favourite"
+            >
+              <span className="text-base">{isFavorited ? "❤️" : "🤍"}</span>
+            </button>
+
+            {/* add / quantity controls - fixed to physical right */}
+            <div className="absolute right-2 bottom-0 flex items-center gap-2">
+              {quantityInCart > 0 ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleUpdateQuantity(quantityInCart - 1);
+                    }}
+                    className="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white hover:bg-gray-200 transition"
+                    disabled={isUpdating}
+                  >
+                    -
+                  </button>
+                  {isUpdating ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-green-600"></div>
+                  ) : (
+                    <span className="text-sm text-gray-800 dark:text-white">
+                      {quantityInCart}
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleUpdateQuantity(quantityInCart + 1);
+                    }}
+                    className="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white hover:bg-gray-200 transition"
+                    disabled={isUpdating}
+                  >
+                    +
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleAddToCart();
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-2 py-2 rounded-lg text-sm transition-colors flex items-center gap-2"
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white" />
+                  ) : (
+                    t("product.add_to_cart")
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {isModalOpen && (
@@ -276,12 +310,12 @@ const ProductItem = ({ id, image, name, price, description }) => {
                       {isUpdating ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
                       ) : (
-                        "إضافة إلى السلة"
+                        t("product.add_to_cart")
                       )}
                     </button>
                   )}
                   <button className="border border-green-800 text-green-800 py-2 px-4 w-full rounded-lg hover:bg-green-50">
-                    اشترِ الآن
+                    {t("product.buy_now")}
                   </button>
                   <button
                     onClick={handleFavorite}
@@ -292,8 +326,8 @@ const ProductItem = ({ id, image, name, price, description }) => {
                     }`}
                   >
                     {isFavorited
-                      ? "❤️ تمت الإضافة إلى المفضلة"
-                      : "🤍 إضافة إلى المفضلة"}
+                      ? `${t("product.favorite_added")} ❤️`
+                      : `🤍 ${t("product.add_to_favorites")}`}
                   </button>
                 </div>
               </div>

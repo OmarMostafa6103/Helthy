@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import Title from "./Title";
 import ProductItem from "./ProductItem";
 import { backendUrl } from "../config";
+import { useTranslation } from "react-i18next";
 
 // قسم لعرض أحدث المجموعات
 const LatestCollection = () => {
+  const { t } = useTranslation();
   const [latestProducts, setLatestProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,12 +67,12 @@ const LatestCollection = () => {
   if (error) {
     return (
       <div className="text-center py-8 text-red-500">
-        <p>{error}</p>
+        <p>{t("home.latest_error", { message: error })}</p>
         <Link
           to="/collection"
           className="inline-block mt-4 px-6 py-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300"
         >
-          استكشف المجموعة الكاملة
+          {t("home.explore_full_collection")}
         </Link>
       </div>
     );
@@ -79,20 +81,23 @@ const LatestCollection = () => {
   return (
     <div className="my-10 px-4 sm:px-6 lg:px-8">
       <div className="text-center py-8 text-2xl sm:text-3xl">
-        <Title text1={"أحدث"} text2={"المجموعات"} />
+        <Title
+          text1={t("home.latest_title_part1")}
+          text2={t("home.latest_title_part2")}
+        />
         <p className="w-full sm:w-3/4 mx-auto text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-          اكتشف أحدث الحلويات المصنوعة يدويًا، مثالية لكل لحظة حلوة.
+          {t("home.latest_subtitle")}
         </p>
       </div>
 
       {latestProducts.length === 0 ? (
         <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-          <p>لا توجد منتجات متاحة حاليًا.</p>
+          <p>{t("home.no_latest_products")}</p>
           <Link
             to="/collection"
             className="inline-block mt-4 px-6 py-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300"
           >
-            استكشف المجموعة الكاملة
+            {t("home.explore_full_collection")}
           </Link>
         </div>
       ) : (
@@ -130,7 +135,7 @@ const LatestCollection = () => {
           to="/collection"
           className="inline-block px-6 py-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300"
         >
-          استكشف المجموعة الكاملة
+          {t("home.explore_full_collection")}
         </Link>
       </div>
 

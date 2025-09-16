@@ -1,9 +1,11 @@
 import { useState, useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { ShopContext } from "../context/ShopContextCore";
 import { toast } from "react-toastify";
 import Title from "../components/Title";
 
 const Contact = () => {
+  const { t } = useTranslation();
   const { backendUrl } = useContext(ShopContext);
   const [formData, setFormData] = useState({
     name: "",
@@ -18,9 +20,7 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!backendUrl || backendUrl.trim() === "") {
-      toast.error(
-        "خطأ: عنوان الخادم الخلفي غير محدد أو فارغ. تحقق من إعدادات التطبيق."
-      );
+      toast.error(t("contact.backend_missing"));
       console.log("backendUrl:", backendUrl);
       return;
     }
@@ -60,53 +60,54 @@ const Contact = () => {
       console.log("Parsed Response Data:", parsedResponse);
 
       if (response.ok) {
-        toast.success(parsedResponse.message || "تم إرسال الرسالة بنجاح!");
+        toast.success(parsedResponse.message || t("contact.sent_success"));
         setFormData({ name: "", email: "", message: "" });
       } else {
         // عرض رسالة الخطأ من الخادم
         const errorMessage =
-          parsedResponse.data?.message?.[0] ||
-          parsedResponse.message ||
-          "حاول مرة أخرى.";
-        toast.error(`فشل إرسال الرسالة: ${errorMessage}`);
+          parsedResponse.data?.message?.[0] || parsedResponse.message || "";
+        toast.error(
+          errorMessage
+            ? t("contact.failed_with_reason", { message: errorMessage })
+            : t("contact.failed")
+        );
       }
     } catch (error) {
       console.error("Error Details:", error);
-      toast.error(
-        "حدث خطأ أثناء الإرسال. تأكد من اتصالك بالإنترنت أو عنوان الخادم."
-      );
+      toast.error(t("contact.send_error"));
     }
   };
 
   return (
     <div id="contact">
-      <Title text1="Contact" text2="Us" />
+      <Title
+        text1={t("contact.title_part1")}
+        text2={t("contact.title_part2")}
+      />
       <h1 className="text-center max-w-3xl mx-auto mt-4 text-md">
-        We&apos;d love to hear from you! Whether you have questions, feedback,
-        or need assistance, our team is here to help. Reach out and let&apos;s
-        connect to create an amazing experience together!
+        {t("contact.description")}
       </h1>
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto pt-8">
-        <div className="flex flex-wrap">
+        <div className="flex flex-wrap md:flex-nowrap md:gap-4 gap-2">
           <div className="w-full md:w-1/2 text-left">
-            Your Name
+            {t("contact.form.name_label")}
             <input
               type="text"
               className="bg-gray-200 dark:bg-gray-700 w-full border border-gray-300 rounded py-3 px-4 mt-2"
               name="name"
-              placeholder="Enter Your Name"
+              placeholder={t("contact.form.name_placeholder")}
               value={formData.name}
               onChange={handleChange}
               required
             />
           </div>
-          <div className="w-full md:w-1/2 text-left md:pl-4">
-            Your Email
+          <div className="w-full md:w-1/2 text-left">
+            {t("contact.form.email_label")}
             <input
               type="email"
               className="bg-gray-200 dark:bg-gray-700 w-full border border-gray-300 rounded py-3 px-4 mt-2"
               name="email"
-              placeholder="Enter Your Email"
+              placeholder={t("contact.form.email_placeholder")}
               value={formData.email}
               onChange={handleChange}
               required
@@ -114,10 +115,10 @@ const Contact = () => {
           </div>
         </div>
         <div className="my-6 text-left">
-          Your Message
+          {t("contact.form.message_label")}
           <textarea
             name="message"
-            placeholder="Enter Your Message"
+            placeholder={t("contact.form.message_placeholder")}
             className="bg-gray-200 dark:bg-gray-700 w-full border border-gray-300 rounded py-3 px-4 mt-2 h-48 resize-none"
             value={formData.message}
             onChange={handleChange}
@@ -127,7 +128,7 @@ const Contact = () => {
           type="submit"
           className="bg-blue-600 text-white px-6 py-2 hover:bg-blue-400"
         >
-          Submit
+          {t("contact.form.submit")}
         </button>
       </form>
     </div>

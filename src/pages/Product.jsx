@@ -9,18 +9,25 @@ import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContextCore";
 import RelatedProduct from "../components/RelatedProduct";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const Product = () => {
   const { productId } = useParams();
   const { currency, addToCart, cartData, updateQuantity } =
     useContext(ShopContext);
+  const { t } = useTranslation();
   const [productData, setProductData] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const productSectionRef = useRef(null);
 
-  const cartItem = cartData.find((item) => item.product_id === productId);
+  // Use the canonical product_id (from fetched productData when available)
+  // and string comparison to avoid type mismatches between route params and stored cart ids.
+  const lookupId = (productData && productData.product_id) || productId;
+  const cartItem = cartData.find(
+    (item) => String(item.product_id) === String(lookupId)
+  );
   const quantityInCart = cartItem ? cartItem.quantity : 0;
 
   const fetchProductData = useCallback(async () => {
@@ -78,6 +85,7 @@ const Product = () => {
   }, [productId]);
 
   const handleAddToCart = () => {
+    console.debug('[Product] handleAddToCart called', { productId, productData, quantityInCart });
     if (productData) {
       if (quantityInCart + 1 > productData.quantity) {
         toast.error(
@@ -95,7 +103,7 @@ const Product = () => {
         productData.quantity
       );
     } else {
-      toast.error("لا يمكن إضافة المنتج إلى السلة: البيانات غير متاحة", {
+      toast.error(t("product.cannot_add_no_data"), {
         style: { background: "red", color: "white" },
       });
     }
@@ -111,7 +119,10 @@ const Product = () => {
       );
       return;
     }
-    updateQuantity(productId, newQuantity, false);
+    // Pass the canonical product_id (not the raw route param) so the context
+    // can correctly find the cart item by product_id.
+    const idToUpdate = (productData && productData.product_id) || productId;
+    updateQuantity(idToUpdate, newQuantity, false);
   };
 
   const scrollToProductSection = () => {
@@ -236,7 +247,12 @@ const Product = () => {
           {quantityInCart > 0 ? (
             <div className="flex items-center gap-3 mt-8">
               <button
-                onClick={() => handleUpdateQuantity(quantityInCart - 1)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.debug('[Product] decrement click', { productId, quantityInCart });
+                    handleUpdateQuantity(quantityInCart - 1);
+                  }}
                 className="w-10 h-10 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
               >
                 -
@@ -245,7 +261,12 @@ const Product = () => {
                 {quantityInCart}
               </span>
               <button
-                onClick={() => handleUpdateQuantity(quantityInCart + 1)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.debug('[Product] increment click', { productId, quantityInCart });
+                  handleUpdateQuantity(quantityInCart + 1);
+                }}
                 className="w-10 h-10 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
               >
                 +
@@ -253,10 +274,14 @@ const Product = () => {
             </div>
           ) : (
             <button
-              onClick={handleAddToCart}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAddToCart();
+              }}
               className="px-8 py-3 text-sm active:bg-gray-700 text-white bg-red-600 hover:bg-red-500 mt-8"
             >
-              إضافة إلى السلة
+              {t("product.add_to_cart")}
             </button>
           )}
           <hr className="mt-8 sm:w-4/5" />

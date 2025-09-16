@@ -1,7 +1,10 @@
 // React default import not required with automatic JSX runtime
 import { assets } from "../assets/assets";
+import { useTranslation } from "react-i18next";
 
 const OurPolicy = () => {
+  const { t } = useTranslation();
+
   return (
     <div
       id="policy"
@@ -15,8 +18,7 @@ const OurPolicy = () => {
         />
         {/* <p className="font-semibold">Best Customer Support</p> */}
         <p className="text-center max-w-[500px] text-[1.25rem] font-light">
-          All our chocolates are beautifully handmade by our award-winning
-          chocolatiers.
+          {t("home.policy.handmade")}
         </p>
       </div>
 
@@ -24,7 +26,7 @@ const OurPolicy = () => {
         <img src={assets.fresh} alt="" className="w-[150px] h-[150px] mb-4" />
         {/* <p className="font-semibold">7 Days Return Policy</p> */}
         <p className="text-center max-w-[500px] text-[1.25rem] font-light">
-          Fresh from Notting Hill using natural ingredients
+          {t("home.policy.fresh")}
         </p>
       </div>
 
@@ -36,7 +38,7 @@ const OurPolicy = () => {
         />
         {/* <p className="font-semibold">Best Customer Support</p> */}
         <p className="text-center max-w-[500px] text-[1.25rem] font-light">
-          Our sublime chocolates stay delicious for weeks
+          {t("home.policy.delicious")}
         </p>
       </div>
 
@@ -44,8 +46,7 @@ const OurPolicy = () => {
         <img src={assets.message} alt="" className="w-[150px] h-[150px] mb-4" />
         {/* <p className="font-semibold">Best Customer Support</p> */}
         <p className="text-center max-w-[500px] text-[1.25rem] font-light">
-          You can add a gift message for the lucky recipient at checkout -
-          personalising your gift
+          {t("home.policy.gift_message")}
         </p>
       </div>
 
@@ -53,8 +54,7 @@ const OurPolicy = () => {
         <img src={assets.backage} alt="" className="w-[150px] h-[150px] mb-4" />
         {/* <p className="font-semibold">Best Customer Support</p> */}
         <p className="text-center max-w-[500px] text-[1.25rem] font-light">
-          We beautifully package our orders with care, so they arrive safely in
-          plastic free packaging
+          {t("home.policy.packaging")}
         </p>
       </div>
     </div>

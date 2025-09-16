@@ -1,12 +1,15 @@
 import { useContext, useState, useMemo, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { ShopContext } from "../context/ShopContextCore";
 import Title from "../components/Title";
+import { useTranslation } from "react-i18next";
 import ProductItem from "../components/ProductItem";
 import { assets } from "../assets/assets";
 import axios from "axios";
 import { backendUrl } from "../config";
 
 const Collection = () => {
+  const { t } = useTranslation();
   const {
     products,
     search,
@@ -15,6 +18,8 @@ const Collection = () => {
     isLoadingProducts,
     setProducts,
   } = useContext(ShopContext);
+
+  const location = useLocation();
 
   const [showFilter, setShowFilter] = useState(false);
   const [category, setCategory] = useState([]);
@@ -72,6 +77,89 @@ const Collection = () => {
 
     fetchCategories();
   }, []);
+
+  // Ensure products are requested when Collection mounts (fix edge SPA navigation case)
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      if (!mounted) return;
+      try {
+        console.log("Collection mounted: forcing fetchProducts for page 1");
+        await fetchProducts(1, 25, false);
+      } catch (err) {
+        console.error("Collection mount fetch failed:", err);
+      }
+    };
+    run();
+    return () => {
+      mounted = false;
+    };
+  }, [fetchProducts]);
+
+  // Also trigger fetch when router location changes to this page (SPA navigation)
+  useEffect(() => {
+    const pathname = location?.pathname || "";
+    const hash = location?.hash || window.location.hash || "";
+    console.log("Collection location changed", { pathname, hash });
+
+    const onCollectionPath = () => {
+      if (pathname.endsWith("/collection") || pathname === "/collection")
+        return true;
+      if (hash.includes("/collection") || hash.includes("#/collection"))
+        return true;
+      return false;
+    };
+
+    if (onCollectionPath()) {
+      console.log(
+        "Collection detected in location (pathname/hash), fetching products",
+        { pathname, hash }
+      );
+      // clear and re-fetch to ensure UI updates
+      (async () => {
+        try {
+          setProducts([]);
+          // wait a tick so productsRef in context syncs to the cleared state
+          await new Promise((res) => setTimeout(res, 0));
+          await fetchProducts(1, 25, false);
+        } catch (err) {
+          console.error("fetchProducts on location change failed:", err);
+        }
+      })();
+    }
+  }, [location, fetchProducts, setProducts]);
+
+  // As a fallback: listen to hashchange and popstate (back/forward) to ensure fetch runs
+  useEffect(() => {
+    const handler = () => {
+      const pathname = window.location.pathname || "";
+      const hash = window.location.hash || "";
+      console.log("navigation event detected (hash/popstate)", {
+        pathname,
+        hash,
+      });
+      if (hash.includes("/collection") || pathname.endsWith("/collection")) {
+        console.log("navigation handler: fetching collection products", {
+          pathname,
+          hash,
+        });
+        setProducts([]);
+        // wait a tick then fetch so context refs update
+        setTimeout(() => {
+          fetchProducts(1, 25, false).catch((err) =>
+            console.error("fetchProducts in navigation handler failed:", err)
+          );
+        }, 0);
+      }
+    };
+
+    window.addEventListener("hashchange", handler);
+    window.addEventListener("popstate", handler);
+    return () => {
+      window.removeEventListener("hashchange", handler);
+      window.removeEventListener("popstate", handler);
+    };
+  }, [fetchProducts, setProducts]);
 
   // Load products
   useEffect(() => {
@@ -210,14 +298,14 @@ const Collection = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 pt-10 border-t">
+    <div className="flex flex-col md:flex-row gap-3 pt-8 border-t">
       {/* Sidebar - Filters */}
-      <div className="w-full md:w-48 lg:w-52 xl:w-56 max-w-full md:max-w-[14rem] lg:max-w-[16rem]">
+      <div className="w-full md:w-44 lg:w-48 xl:w-52 max-w-full md:max-w-[13rem] lg:max-w-[15rem]">
         <p
           onClick={() => setShowFilter(!showFilter)}
           className="my-2 text-xl flex items-center cursor-pointer gap-2"
         >
-          فلاتر
+          {t("filters")}
           <img
             src={assets.dropdown_icon}
             alt=""
@@ -226,18 +314,18 @@ const Collection = () => {
         </p>
 
         <div
-          className={`border border-gray-300 pl-5 py-3 mt-2 ${
+          className={`border border-gray-300 px-3 py-2 mt-2 ${
             showFilter ? "" : "hidden"
           } md:block rounded-lg shadow-sm bg-white dark:bg-gray-800 w-full`}
         >
-          <p className="mb-3 text-sm font-medium">الفئات</p>
+          <p className="mb-3 text-sm font-medium">{t("filters_categories")}</p>
 
           {isLoadingCategories ? (
-            <p className="text-gray-500">جارٍ تحميل الفئات...</p>
+            <p className="text-gray-500">{t("categories_loading")}</p>
           ) : error ? (
             <p className="text-red-500">{error}</p>
           ) : !Array.isArray(categories) || categories.length === 0 ? (
-            <p className="text-gray-500">لا توجد فئات متاحة.</p>
+            <p className="text-gray-500">{t("no_categories")}</p>
           ) : (
             <div className="flex flex-col gap-2 text-sm font-light">
               {categories
@@ -317,33 +405,36 @@ const Collection = () => {
       {/* Main content */}
       <div className="flex-1" ref={productGridRef}>
         <div className="flex flex-col md:flex-row justify-between items-center text-base sm:text-2xl mb-4">
-          <Title text1="جميع" text2="المجموعات" />
+          <Title
+            text1={t("collection.title_part1")}
+            text2={t("collection.title_part2")}
+          />
           <select
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => setSortType(e.target.value)}
             className="border-2 bg-gray-500 dark:bg-white text-white dark:text-black text-xs sm:text-sm px-1 sm:px-2 rounded mt-2 md:mt-0 w-full md:w-auto max-w-[10rem]"
           >
-            <option value="relevant">الترتيب حسب: الأهمية</option>
-            <option value="low-high">من الأقل إلى الأعلى</option>
-            <option value="high-low">من الأعلى إلى الأقل</option>
+            <option value="relevant">{t("sort_relevant")}</option>
+            <option value="low-high">{t("sort_low_high")}</option>
+            <option value="high-low">{t("sort_high_low")}</option>
           </select>
         </div>
 
         {/* حالة التحميل */}
         {products.length === 0 && (isLoadingProducts || localLoading) ? (
           <p className="text-center text-gray-500 text-lg py-10 animate-pulse">
-            جارٍ تحميل المنتجات...
+            {t("loading_products")}
           </p>
         ) : filteredAndSortedProducts.length === 0 ? (
-          <p className="text-gray-500 text-center">لا توجد منتجات متاحة.</p>
+          <p className="text-gray-500 text-center">{t("no_products")}</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 gap-y-6">
+            <div className="grid grid-cols-1 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 gap-y-4">
               {filteredAndSortedProducts.map((item, index) => (
                 <ProductItem
                   key={index}
                   id={item.product_id}
-                  name={item.name || "غير مسمى"}
+                  name={item.name || t("product.unnamed")}
                   image={item.image || ""}
                   price={item.price || 0}
                   description={item.description || ""}
@@ -355,7 +446,7 @@ const Collection = () => {
             {isLoadingProducts && products.length > 0 && (
               <div className="text-center py-4">
                 <span className="text-gray-500 animate-pulse">
-                  جارٍ تحميل المزيد...
+                  {t("load_more")}
                 </span>
               </div>
             )}

@@ -1,0 +1,205 @@
+{
+  "filters": "فلاتر",
+  "categories_loading": "جارٍ تحميل الفئات...",
+  "no_categories": "لا توجد فئات متاحة.",
+  "no_products": "لا توجد منتجات متاحة.",
+  "loading_products": "جارٍ تحميل المنتجات...",
+  "load_more": "جارٍ تحميل المزيد...",
+  "try_search_other": "حاول تعديل الفلترة أو جرب البحث عن منتج آخر.",
+  "all_collections": "جميع المجموعات",
+  "sort_relevant": "الترتيب حسب: الأهمية",
+  "sort_low_high": "من الأقل إلى الأعلى",
+  "sort_high_low": "من الأعلى إلى الأقل",
+  "empty_message": "لا توجد منتجات متاحة.",
+  "cookie_loader_alt": "جارٍ التحميل",
+  "navbar": {
+    "home": "الرئيسية",
+    "collection": "المجموعات",
+    "about": "معلومات عنا",
+    "contact": "اتصل بنا",
+    "orders": "الطلبات",
+    "search_title": "ابحث عن المنتجات",
+    "search_placeholder": "ابحث بالاسم...",
+    "no_results": "لم يتم العثور على نتائج.",
+    "your_cart": "سلة التسوق",
+    "cart_loading": "جارٍ تحميل السلة...",
+    "subtotal": "المجموع الجزئي",
+    "shipping_fees": "رسوم الشحن",
+    "total": "الإجمالي",
+    "view_cart": "عرض السلة",
+    "proceed_checkout": "المتابعة إلى الدفع",
+    "favorites": "المفضلة"
+  },
+  "navbar_extras": {
+    "back": "عودة",
+    "profile": "الملف الشخصي",
+    "welcome": "مرحبًا، {{name}}",
+    "logout": "تسجيل الخروج",
+    "sign_in": "تسجيل الدخول",
+    "guest": "زائر"
+  },
+  "home": {
+    "hero_bestsellers": "أفضل مبيعاتنا",
+    "hero_shop_now": "تسوق الآن",
+    "hero_alt": "صورة البطل",
+    "latest_title_part1": "أحدث",
+    "latest_title_part2": "المجموعات",
+    "latest_subtitle": "اكتشف أحدث الحلويات المصنوعة يدويًا، مثالية لكل لحظة حلوة.",
+    "latest_error": "فشل في تحميل أحدث المنتجات: {{message}}",
+    "explore_full_collection": "استكشف المجموعة الكاملة",
+    "no_latest_products": "لا توجد منتجات متاحة حاليًا.",
+    "visited_title_part1": "العناصر",
+    "visited_title_part2": "المشاهدة",
+    "visited_subtitle": "استكشف المنتجات التي شاهدتها مؤخرًا.",
+    "policy": {
+      "handmade": "جميع حلوياتنا مصنوعة يدويًا بشكل جميل من قبل شوكولاتيريينا الحاصلين على جوائز.",
+      "fresh": "طازجة من نوتينغ هيل باستخدام مكونات طبيعية",
+      "delicious": "تبقى شوكولاتاتنا اللذيذة لعدة أسابيع",
+      "gift_message": "يمكنك إضافة رسالة هدية للمستلم المحظوظ عند الخروج - تخصيص هديتك",
+      "packaging": "نقوم بتغليف طلباتنا بعناية بحيث تصل بأمان في تغليف خالٍ من البلاستيك"
+    }
+  },
+  "collection": {
+    "title_part1": "جميع",
+    "title_part2": "المجموعات"
+  },
+  "filters_categories": "الفئات",
+  "product": {
+    "unnamed": "غير مسمى",
+    "add_to_cart": "إضافة إلى السلة",
+    "price_not_available": "السعر غير متاح",
+    "buy_now": "اشترِ الآن",
+    "add_to_favorites": "إضافة إلى المفضلة",
+    "favorite_added": "تمت الإضافة إلى المفضلة",
+    "cannot_add_no_data": "لا يمكن إضافة المنتج إلى السلة: البيانات غير متاحة"
+  },
+  "about": {
+    "title_part1": "معلومات",
+    "title_part2": "عنا",
+    "description": "نحن Luna Helthy، شركة متخصصة بصناعة الحلويات يدوياً، نكرس جهودنا لصنع أفضل الشوكولاتة باستخدام مكونات طبيعية. فريقنا يعتني بالجودة والتغليف بعناية.",
+    "contact_button": "اتصل بنا"
+  },
+  "footer": {
+    "about_short": "شوكولاتة مصنوعة يدويًا بعناية.",
+    "company": "الشركة",
+    "policy": "سياسة",
+    "get_in_touch": "تواصل معنا",
+    "phone_label": "رقم الهاتف",
+    "whatsapp_label": "رقم الواتساب",
+    "email_label": "البريد الإلكتروني"
+  },
+  "contact": {
+    "title_part1": "اتصل",
+    "title_part2": "بنا",
+    "description": "نود سماعك! سواء كانت لديك أسئلة أو ملاحظات أو تحتاج إلى مساعدة، فريقنا هنا لمساعدتك.",
+    "backend_missing": "خطأ: عنوان الخادم الخلفي غير مضبوط. تحقق من إعدادات التطبيق.",
+    "sent_success": "تم إرسال الرسالة بنجاح!",
+    "failed": "فشل في إرسال الرسالة. حاول مرة أخرى.",
+    "failed_with_reason": "فشل في إرسال الرسالة: {{message}}",
+    "send_error": "حدث خطأ أثناء الإرسال. تحقق من الشبكة أو عنوان الخادم.",
+    "form": {
+      "name_label": "اسمك",
+      "name_placeholder": "أدخل اسمك",
+      "email_label": "بريدك الإلكتروني",
+      "email_placeholder": "أدخل بريدك الإلكتروني",
+      "message_label": "رسالتك",
+      "message_placeholder": "اكتب رسالتك",
+      "submit": "أرسل الرسالة"
+    }
+  },
+  "orders": {
+    "title": "طلباتي",
+    "loading": "جارٍ تحميل الطلبات...",
+    "login_required": "يرجى تسجيل الدخول لعرض طلباتك.",
+    "no_token": "لم يتم العثور على توكن تسجيل الدخول.",
+    "fetch_failed": "فشل جلب الطلبات",
+    "fetch_error": "حدث خطأ أثناء جلب الطلبات.",
+    "fetch_error_with_reason": "حدث خطأ أثناء جلب الطلبات: {{message}}",
+    "unknown_error": "خطأ غير معروف",
+    "auth_expired": "انتهت صلاحية الجلسة أو غير صالحة. يرجى تسجيل الدخول مرة أخرى.",
+    "login": "تسجيل الدخول",
+    "no_orders": "لا توجد طلبات بعد",
+    "price_label": "السعر:",
+    "quantity_label": "الكمية:",
+    "order_date_label": "تاريخ الطلب:",
+    "track_button": "تتبع الطلب",
+    "status_toast": "حالة الطلب: {{status}}"
+  },
+  "placeOrder": {
+    "title": { "part1": "معلومات", "part2": "التوصيل" },
+    "sections": {
+      "customer_info": "بيانات العميل",
+      "order_type": "نوع الطلب",
+      "recipient_info": "بيانات المستلم",
+      "delivery_address": "عنوان التوصيل"
+    },
+    "fields": {
+      "first_name": {
+        "label": "الاسم الأول",
+        "placeholder": "أدخل الاسم الأول"
+      },
+      "last_name": {
+        "label": "الاسم الأخير",
+        "placeholder": "أدخل الاسم الأخير"
+      },
+      "phone": { "label": "رقم الهاتف", "placeholder": "مثال: +201234567890" },
+      "email": {
+        "label": "البريد الإلكتروني",
+        "placeholder": "أدخل البريد الإلكتروني"
+      },
+      "recipient_name": {
+        "label": "اسم المستلم",
+        "placeholder": "اسم مستلم الهدية"
+      },
+      "recipient_phone": {
+        "label": "هاتف المستلم",
+        "placeholder": "رقم هاتف المستلم"
+      },
+      "city": { "label": "المدينة", "placeholder": "أدخل اسم المدينة" },
+      "state": { "label": "المحافظة", "placeholder": "أدخل اسم المحافظة" },
+      "address": {
+        "label": "العنوان الكامل",
+        "placeholder": "أدخل العنوان الكامل"
+      },
+      "zipcode": {
+        "label": "الرمز البريدي",
+        "placeholder": "أدخل الرمز البريدي"
+      },
+      "country": { "label": "الدولة", "placeholder": "أدخل اسم الدولة" }
+    },
+    "order_types": { "gift": "إهداء", "regular": "عادي" },
+    "gift": { "wrapping_fee": "رسوم تغليف الهدايا: {{currency}} {{amount}}" },
+    "payment": {
+      "title": { "part1": "طريقة", "part2": "الدفع" },
+      "methods": { "cod": "الدفع عند الاستلام" }
+    },
+    "processing": "جاري المعالجة...",
+    "proceed_to_payment": "أكمل إلى الدفع",
+    "errors": {
+      "login_required": "يرجى تسجيل الدخول أولاً.",
+      "cart_empty": "سلة التسوق فارغة. أضف منتجات أولاً.",
+      "session_expired": "انتهت جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.",
+      "order_failed_with_reason": "فشل إتمام الطلب: {{message}}"
+    },
+    "success": { "order_created": "تم إتمام الطلب بنجاح!" },
+    "promo": {
+      "prompt": "هل لديك كود خصم؟",
+      "placeholder": "أدخل كود الخصم",
+      "apply": "تطبيق",
+      "applied": "تم تطبيق كود الخصم: {{code}}",
+      "invalid": "يرجى إدخال كود خصم صالح"
+    },
+    "cart": {
+      "title": "ملخص السلة",
+      "empty": "السلة فارغة",
+      "subtotal": "المجموع",
+      "shipping_fee": "مصاريف الشحن",
+      "total": "الإجمالي"
+    },
+    "actions": { "edit_cart": "تعديل" }
+  },
+
+  "payment_finish": { "part1": "إتمام", "part2": "الدفع" },
+  "actions": { "back": "رجوع" },
+  "gift": { "label": "رسوم تغليف الهدايا" }
+}

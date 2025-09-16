@@ -367,11 +367,20 @@ const ShopContextProvider = (props) => {
       }
 
       // التحقق من حالات التكرار أو التحميل الجاري (استخدم refs لتجنب إعادة الإنشاء)
+      // إذا كنا بالفعل في حالة تحميل، أو سبق أن جلبنا نفس الصفحة ولا يوجد سبب لإعادة الجلب
+      // تجنّب إعادة الجلب فقط عندما لدينا بالفعل منتجات محملة لتلك الصفحة
       if (
         isLoadingProductsRef.current ||
-        (lastFetchedPage.current === page && !append && !fullUrl)
+        (lastFetchedPage.current === page &&
+          !append &&
+          !fullUrl &&
+          productsRef.current &&
+          productsRef.current.length > 0)
       ) {
-        console.log("⛔ تم تجاهل التحميل: قيد التحميل أو نفس الصفحة", { page });
+        console.log(
+          "⛔ تم تجاهل التحميل: قيد التحميل أو نفس الصفحة (ومنتجات موجودة)",
+          { page }
+        );
         setIsLoadingProducts(false);
         return;
       }

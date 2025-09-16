@@ -7,6 +7,8 @@ import { assets } from "../assets/assets";
 import { Link, NavLink } from "react-router-dom";
 import { ShopContext } from "../context/ShopContextCore";
 import Togglemode from "./Tooglemode";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { backendUrl } from "../config";
@@ -39,6 +41,8 @@ const Navbar = () => {
   const profileIconRef = useRef(null);
   const searchModalRef = useRef(null);
   const cartModalRef = useRef(null);
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (cartModalVisible || searchModalVisible) {
@@ -136,6 +140,7 @@ const Navbar = () => {
     setSearchModalVisible(false);
     setSearchTerm("");
     setShowSearch(false);
+    // use productId (which should be the numeric/product_id) to match Product route
     navigate(`/product/${productId}`);
   };
 
@@ -212,28 +217,32 @@ const Navbar = () => {
       </Link>
       <ul className="hidden lg:flex md:hidden gap-5 text-sm">
         <NavLink to="/" className="flex flex-col items-center gap-1">
-          <p>HOME</p>
+          <p>{t("navbar.home")}</p>
           <hr className="w-3/4 border-none h-[1.5px] bg-black dark:bg-white hidden" />
         </NavLink>
         <NavLink to="/collection" className="flex flex-col items-center gap-1">
-          <p>COLLECTION</p>
+          <p>{t("navbar.collection")}</p>
           <hr className="w-3/4 border-none h-[1.5px] bg-black dark:bg-white hidden" />
         </NavLink>
         <NavLink to="/about" className="flex flex-col items-center gap-1">
-          <p>ABOUT</p>
+          <p>{t("navbar.about")}</p>
           <hr className="w-3/4 border-none h-[1.5px] bg-black dark:bg-white hidden" />
         </NavLink>
         <NavLink to="/contact" className="flex flex-col items-center gap-1">
-          <p>CONTACT</p>
+          <p>{t("navbar.contact")}</p>
           <hr className="w-3/4 border-none h-[1.5px] bg-black dark:bg-white hidden" />
         </NavLink>
         <NavLink to="/orders" className="flex flex-col items-center gap-1">
-          <p>ORDERS</p>
+          <p>{t("navbar.orders")}</p>
           <hr className="w-3/4 border-none h-[1.5px] bg-black dark:bg-white hidden" />
         </NavLink>
       </ul>
 
       <div className="flex items-center gap-3 md:gap-5 lg:gap-6">
+        {/* Language switcher (desktop) */}
+        <div className="hidden md:flex items-center">
+          <LanguageSwitcher className="text-sm" />
+        </div>
         <div className="relative">
           <img
             onClick={handleSearchClick}
@@ -267,14 +276,14 @@ const Navbar = () => {
                   </svg>
                 </button>
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-white text-center mb-4">
-                  Search
+                  {t("navbar.search_title")}
                 </h2>
                 <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-2 mb-4 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-300">
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search for products..."
+                    placeholder={t("navbar.search_placeholder")}
                     className="w-full bg-transparent text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-300 outline-none text-sm"
                   />
                   <img
@@ -288,12 +297,21 @@ const Navbar = () => {
                     {filteredProducts.length > 0 ? (
                       filteredProducts.map((product) => (
                         <div
-                          key={product._id}
-                          onClick={() => handleProductClick(product._id)}
+                          key={
+                            product.product_id || product._id || product.name
+                          }
+                          onClick={() =>
+                            handleProductClick(
+                              product.product_id || product._id
+                            )
+                          }
                           className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg cursor-pointer transition-all duration-200"
                         >
                           <img
-                            src={product.image[0] || assets.default_image}
+                            src={
+                              (product.image && product.image[0]) ||
+                              assets.default_image
+                            }
                             alt={product.name}
                             className="w-14 h-14 rounded-md object-cover shadow-sm"
                             onError={(e) =>
@@ -312,7 +330,7 @@ const Navbar = () => {
                       ))
                     ) : (
                       <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                        No results found
+                        {t("navbar.no_results")}
                       </p>
                     )}
                   </div>
@@ -341,7 +359,7 @@ const Navbar = () => {
               >
                 <div className="flex items-center justify-end mb-4 relative">
                   <h2 className="text-lg font-medium text-gray-800 dark:text-white flex-1 text-right">
-                    Your Cart
+                    {t("navbar.your_cart")}
                   </h2>
                 </div>
                 <hr className="border-gray-200 dark:border-gray-600 mb-4" />
@@ -367,108 +385,108 @@ const Navbar = () => {
                 <div className="mt-2 h-[calc(100vh-120px)] flex flex-col justify-start">
                   {isLoadingCart ? (
                     <p className="text-lg text-gray-500 dark:text-gray-400 text-center">
-                      جارٍ تحميل السلة...
+                      {t("navbar.cart_loading")}
                     </p>
                   ) : cartData.length > 0 ? (
                     <>
                       <div className="max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar pr-4">
-                        {cartData.map((item, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-3 py-4 border-b border-gray-200 dark:border-gray-600 relative"
-                          >
-                            <img
-                              src={item.image || assets.default_image}
-                              alt={item.product_name || "Product"}
-                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-cover"
-                              onError={(e) =>
-                                (e.target.src = assets.default_image)
-                              }
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-800 dark:text-white">
-                                {item.product_name || "Unnamed Product"}
-                              </p>
-                              <div className="flex justify-between items-center mt-1">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.item_id,
-                                        item.quantity - 1
-                                      )
-                                    }
-                                    className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white"
-                                    disabled={loadingItems[item.item_id]}
-                                  >
-                                    -
-                                  </button>
-                                  <span className="text-sm text-gray-800 dark:text-white min-w-[2rem] flex items-center justify-center">
-                                    {loadingItems[item.item_id] ? (
-                                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-600"></div>
-                                    ) : (
-                                      item.quantity
-                                    )}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.item_id,
-                                        item.quantity + 1
-                                      )
-                                    }
-                                    className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white"
-                                    disabled={loadingItems[item.item_id]}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                                <p className="text-sm font-semibold text-yellow-500 dark:text-yellow-400 text-right">
-                                  {(item.price || 0).toFixed(2)} EGP
+                        {cartData.map((item, index) => {
+                          const unitPrice = parseFloat(item.product_price || item.price) || 0;
+                          const lineTotal = unitPrice * (item.quantity || 1);
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center gap-3 py-4 border-b border-gray-200 dark:border-gray-600 relative"
+                            >
+                              <img
+                                src={item.image || assets.default_image}
+                                alt={item.product_name || "Product"}
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-cover"
+                                onError={(e) => (e.target.src = assets.default_image)}
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                  {item.product_name || "Unnamed Product"}
                                 </p>
-                              </div>
-                              <button
-                                onClick={() => removeFromCart(item.item_id)}
-                                className="absolute top-4 right-0 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200"
-                                disabled={loadingItems[item.item_id]}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-5 w-5"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
+                                <div className="flex justify-between items-center mt-1">
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        console.debug('[Navbar] decrement click', { itemId: item.item_id, quantity: item.quantity });
+                                        handleUpdateQuantity(item.item_id, item.quantity - 1);
+                                      }}
+                                      className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white"
+                                      disabled={loadingItems[item.item_id]}
+                                    >
+                                      -
+                                    </button>
+                                    <span className="text-sm text-gray-800 dark:text-white min-w-[2rem] flex items-center justify-center">
+                                      {loadingItems[item.item_id] ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-600"></div>
+                                      ) : (
+                                        item.quantity
+                                      )}
+                                    </span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        console.debug('[Navbar] increment click', { itemId: item.item_id, quantity: item.quantity });
+                                        handleUpdateQuantity(item.item_id, item.quantity + 1);
+                                      }}
+                                      className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-gray-800 dark:text-white"
+                                      disabled={loadingItems[item.item_id]}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                  <p className="text-sm font-semibold text-yellow-500 dark:text-yellow-400 text-right">
+                                    {currency} {lineTotal.toFixed(2)}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => removeFromCart(item.item_id)}
+                                  className="absolute top-4 right-0 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200"
+                                  disabled={loadingItems[item.item_id]}
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4a1 1 0 011 1v1H9V4a1 1 0 011-1zm-5 4h12"
-                                  />
-                                </svg>
-                              </button>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4a1 1 0 011 1v1H9V4a1 1 0 011-1zm-5 4h12"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                       <div className="absolute bottom-20 left-0 right-0 bg-white dark:bg-[#1a2338] pt-4 pb-2 px-4 sm:px-6 border-t border-gray-200 dark:border-gray-600">
                         <div className="flex justify-between text-sm font-medium text-gray-800 dark:text-white">
-                          <p>Subtotal:</p>
+                          <p>{t("navbar.subtotal")}</p>
                           <p>{cartTotalPrice.toFixed(2)} EGP</p>{" "}
-                          {/* استخدام cartTotalPrice */}
                         </div>
                         {shippingFees > 0 && (
                           <div className="flex justify-between text-sm font-medium text-gray-800 dark:text-white mt-1">
-                            <p>Shipping Fees:</p>
+                            <p>{t("navbar.shipping_fees")}</p>
                             <p>{shippingFees.toFixed(2)} EGP</p>
                           </div>
                         )}
                         <div className="flex justify-between text-base font-semibold text-gray-800 dark:text-white mt-2">
-                          <p>Total:</p>
+                          <p>{t("navbar.total")}</p>
                           <p>
                             {(cartTotalPrice + shippingFees).toFixed(2)} EGP
-                          </p>{" "}
-                          {/* استخدام cartTotalPrice */}
+                          </p>
                         </div>
                       </div>
                       <div className="absolute bottom-4 left-0 right-0 px-4 sm:px-6">
@@ -480,7 +498,7 @@ const Navbar = () => {
                             }}
                             className="w-[30%] bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-200"
                           >
-                            View Cart
+                            {t("navbar.view_cart")}
                           </button>
                           <button
                             onClick={() => {
@@ -490,7 +508,7 @@ const Navbar = () => {
                             className="w-[70%] bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
                             disabled={cartData.length === 0}
                           >
-                            Proceed to Checkout
+                            {t("navbar.proceed_checkout")}
                           </button>
                         </div>
                       </div>
@@ -510,7 +528,7 @@ const Navbar = () => {
           <button
             onClick={() => setShowFavoritesMenu((prev) => !prev)}
             className="w-7 h-7 flex items-center justify-center text-pink-600 hover:text-pink-800 text-2xl focus:outline-none"
-            title="المفضلة"
+            title={t("navbar.favorites")}
           >
             ❤️
           </button>
@@ -520,6 +538,11 @@ const Navbar = () => {
         </div>
 
         <Togglemode />
+
+        {/* Language switcher (mobile inside menu icon area) */}
+        <div className="md:hidden">
+          <LanguageSwitcher />
+        </div>
 
         {isLoggedIn ? (
           <div className="relative">
@@ -609,10 +632,10 @@ const Navbar = () => {
             >
               <img
                 src={assets.dropdown_icon}
-                alt="Back Icon"
+                alt={t("navbar_extras.back")}
                 className="h-4 rotate-180"
               />
-              <p>Back</p>
+              <p>{t("navbar_extras.back")}</p>
             </div>
             <div className="flex-1 overflow-y-auto">
               <NavLink
@@ -620,47 +643,49 @@ const Navbar = () => {
                 className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
                 to="/"
               >
-                Home
+                {t("navbar.home")}
               </NavLink>
               <NavLink
                 onClick={() => setVisible(false)}
                 className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
                 to="/collection"
               >
-                Collection
+                {t("navbar.collection")}
               </NavLink>
               <NavLink
                 onClick={() => setVisible(false)}
                 className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
                 to="/about"
               >
-                About
+                {t("navbar.about")}
               </NavLink>
               <NavLink
                 onClick={() => setVisible(false)}
                 className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
                 to="/contact"
               >
-                Contact
+                {t("navbar.contact")}
               </NavLink>
               <NavLink
                 onClick={() => setVisible(false)}
                 className="py-6 pl-6 border-b border-gray-600 dark:border-grey-600 block"
                 to="/orders"
               >
-                Orders
+                {t("navbar.orders")}
               </NavLink>
               <NavLink
                 onClick={() => setVisible(false)}
                 className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600 block"
                 to="/profile"
               >
-                Profile
+                {t("navbar_extras.profile")}
               </NavLink>
               {isLoggedIn ? (
                 <div className="py-6 pl-6 border-b border-gray-200 dark:border-gray-600">
                   <p className="text-md">
-                    Welcome, {userData?.firstName || "Guest"}
+                    {t("navbar_extras.welcome", {
+                      name: userData?.firstName || t("navbar_extras.guest"),
+                    })}
                   </p>
                   <button
                     onClick={() => {
@@ -669,7 +694,7 @@ const Navbar = () => {
                     }}
                     className="text-md border-2 hover:bg-red-600 hover:text-white border-gray-600 px-4 py-2 rounded-md bg-red-500 mt-2"
                   >
-                    Logout
+                    {t("navbar_extras.logout")}
                   </button>
                 </div>
               ) : (
@@ -678,7 +703,7 @@ const Navbar = () => {
                   to="/login"
                 >
                   <button className="text-md border-2 hover:bg-green-300 hover:text-black border-gray-600 px-4 py-2 rounded-md bg-green-500">
-                    Sign In
+                    {t("navbar_extras.sign_in")}
                   </button>
                 </Link>
               )}

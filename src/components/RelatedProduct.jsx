@@ -3,9 +3,11 @@ import { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../context/ShopContextCore";
 import ProductItem from "./ProductItem";
 import Title from "./Title";
+import { useNavigate } from "react-router-dom";
 
 const RelatedProduct = ({ category, subCategory, scrollToProduct }) => {
   const { products } = useContext(ShopContext);
+  const navigate = useNavigate();
   const [related, setRelated] = useState([]);
 
   useEffect(() => {
@@ -31,11 +33,12 @@ const RelatedProduct = ({ category, subCategory, scrollToProduct }) => {
       <div className="grid overflow-hidden grid-cols-2 mt-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 gap-y-6">
         {related.map((item, index) => (
           <div
-            className="cursor-pointer border-2 rounded-md dark:border-none border-gray-400 px-3"
+            className="cursor-pointer p-0"
             key={index}
             onClick={() => {
+              // scrollToProduct may move the page; navigate client-side to keep SPA behavior
               scrollToProduct();
-              window.location.href = `/product/${item.product_id}`;
+              navigate(`/product/${item.product_id}`);
             }}
           >
             <ProductItem

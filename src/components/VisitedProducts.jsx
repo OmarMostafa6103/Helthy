@@ -2,12 +2,14 @@ import { useContext, useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { ShopContext } from "../context/ShopContextCore";
 import Title from "./Title";
+import { useTranslation } from "react-i18next";
 import ProductItem from "./ProductItem";
 import { backendUrl } from "../config";
 import { toast } from "react-toastify";
 
 // قسم لعرض المنتجات التي تمت زيارتها مؤخرًا
 const VisitedProducts = () => {
+  const { t } = useTranslation();
   const { isLoggedIn } = useContext(ShopContext);
   const [visitedProducts, setVisitedProducts] = useState([]);
   const [shouldRender, setShouldRender] = useState(false);
@@ -187,9 +189,12 @@ const VisitedProducts = () => {
   return (
     <div id="visited-products" className="my-10 px-4 sm:px-6 lg:px-8">
       <div className="text-center py-8 text-2xl sm:text-3xl">
-        <Title text1={"المشاهدة"} text2={"مؤخرًا"} />
+        <Title
+          text1={t("home.visited_title_part1")}
+          text2={t("home.visited_title_part2")}
+        />
         <p className="w-full sm:w-3/4 mx-auto text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-          استكشف المنتجات التي شاهدتها مؤخرًا.
+          {t("home.visited_subtitle")}
         </p>
       </div>
 

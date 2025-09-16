@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import Title from "../components/Title";
 import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContextCore";
@@ -6,6 +7,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 
 const Orders = () => {
+  const { t } = useTranslation();
   const { currency, isLoggedIn, backendUrl, navigate, isAuthChecked } =
     useContext(ShopContext);
   const [orderData, setOrderData] = useState([]);
@@ -18,7 +20,7 @@ const Orders = () => {
     hasShownAuthWarning.current = true;
     toast.warn(
       <div>
-        جلسة تسجيل الدخول منتهية أو غير صالحة. يرجى تسجيل الدخول مرة أخرى.
+        {t("orders.auth_expired")}
         <button
           onClick={() => {
             localStorage.removeItem("token");
@@ -27,12 +29,12 @@ const Orders = () => {
           }}
           className="ml-2 px-2 py-1 bg-blue-500 text-white rounded"
         >
-          تسجيل الدخول
+          {t("orders.login")}
         </button>
       </div>,
       { autoClose: false }
     );
-  }, [navigate]);
+  }, [navigate, t]);
 
   useEffect(() => {
     const fetchOrders = async (retries = 3, delay = 1000) => {
@@ -41,7 +43,7 @@ const Orders = () => {
 
       if (!isLoggedIn) {
         setIsLoading(false);
-        toast.error("يرجى تسجيل الدخول لعرض طلباتك");
+        toast.error(t("orders.login_required"));
         navigate("/login");
         return;
       }
@@ -49,8 +51,8 @@ const Orders = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         setIsLoading(false);
-        setError("لم يتم العثور على توكن تسجيل الدخول");
-        toast.error("يرجى تسجيل الدخول مرة أخرى");
+        setError(t("orders.no_token"));
+        toast.error(t("orders.login_required"));
         navigate("/login");
         return;
       }
@@ -66,7 +68,7 @@ const Orders = () => {
               setOrderData(response.data.data || []);
               break;
             }
-            throw new Error(response.data.message || "فشل جلب الطلبات");
+            throw new Error(response.data.message || t("orders.fetch_failed"));
           } catch (err) {
             console.error("Error fetching orders:", err);
             if (i === retries - 1) throw err;
@@ -76,10 +78,14 @@ const Orders = () => {
       } catch (err) {
         console.error("Final error in fetchOrders:", err);
         setError(
-          "حدث خطأ أثناء جلب الطلبات: " +
-            (err.response?.data?.message || err.message || "خطأ غير معروف")
+          t("orders.fetch_error_with_reason", {
+            message:
+              err.response?.data?.message ||
+              err.message ||
+              t("orders.unknown_error"),
+          })
         );
-        toast.error("حدث خطأ أثناء جلب الطلبات");
+        toast.error(t("orders.fetch_error"));
         if (err.response?.status === 401 || err.response?.status === 422) {
           showAuthWarning();
         }
@@ -93,18 +99,18 @@ const Orders = () => {
       return () => clearTimeout(timer);
     }
     fetchOrders();
-  }, [isLoggedIn, backendUrl, navigate, isAuthChecked, showAuthWarning]);
+  }, [isLoggedIn, backendUrl, navigate, isAuthChecked, showAuthWarning, t]);
 
   return (
     <div className="border-t py-20">
       <div className="text-2xl">
-        <Title text1="طلباتي" text2="" />
+        <Title text1={t("orders.title")} text2="" />
       </div>
       <div>
         {isLoading ? (
           <div className="w-full mt-20 flex flex-col justify-center items-center">
             <p className="font-medium mt-2 text-lg sm:text-2xl">
-              جارٍ تحميل الطلبات...
+              {t("orders.loading")}
             </p>
           </div>
         ) : error ? (
@@ -132,12 +138,16 @@ const Orders = () => {
                         <p className="font-medium">{item.product_name}</p>
                         <div>
                           <p>
-                            السعر: {currency}
+                            {t("orders.price_label")} {currency}
                             {item.total_price}
                           </p>
-                          <p>الكمية: {item.quantity}</p>
+                          <p>
+                            {t("orders.quantity_label")} {item.quantity}
+                          </p>
                         </div>
-                        <p>تاريخ الطلب: {order.order_date}</p>
+                        <p>
+                          {t("orders.order_date_label")} {order.order_date}
+                        </p>
                       </div>
                     </div>
                   ))
@@ -158,11 +168,13 @@ const Orders = () => {
                 </div>
                 <button
                   onClick={() =>
-                    toast.success(`حالة طلبك: ${order.order_status}`)
+                    toast.success(
+                      t("orders.status_toast", { status: order.order_status })
+                    )
                   }
                   className="border px-4 py-2 text-sm font-medium rounded-sm"
                 >
-                  تتبع الطلب
+                  {t("orders.track_button")}
                 </button>
               </div>
             </div>
@@ -170,7 +182,7 @@ const Orders = () => {
         ) : (
           <div className="w-full mt-20 flex flex-col justify-center items-center">
             <p className="font-medium mt-2 text-lg sm:text-2xl">
-              ليس لديك أي طلبات بعد
+              {t("orders.no_orders")}
             </p>
           </div>
         )}

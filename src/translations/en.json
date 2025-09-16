@@ -1,0 +1,201 @@
+{
+  "filters": "Filters",
+  "categories_loading": "Loading categories...",
+  "no_categories": "No categories available.",
+  "no_products": "No products available.",
+  "loading_products": "Loading products...",
+  "load_more": "Loading more...",
+  "try_search_other": "Try changing filters or searching for something else.",
+  "all_collections": "All Collections",
+  "sort_relevant": "Sort by: Relevant",
+  "sort_low_high": "Low to High",
+  "sort_high_low": "High to Low",
+  "empty_message": "No products available.",
+  "cookie_loader_alt": "Loading",
+  "navbar": {
+    "home": "Home",
+    "collection": "Collection",
+    "about": "About",
+    "contact": "Contact",
+    "orders": "Orders",
+    "search_title": "Search Products",
+    "search_placeholder": "Search by name...",
+    "no_results": "No results found.",
+    "your_cart": "Your Cart",
+    "cart_loading": "Loading cart...",
+    "subtotal": "Subtotal",
+    "shipping_fees": "Shipping Fees",
+    "total": "Total",
+    "view_cart": "View Cart",
+    "proceed_checkout": "Proceed to Checkout",
+    "favorites": "Favorites"
+  },
+  "navbar_extras": {
+    "back": "Back",
+    "profile": "Profile",
+    "welcome": "Welcome, {{name}}",
+    "logout": "Logout",
+    "sign_in": "Sign In",
+    "guest": "Guest"
+  },
+  "home": {
+    "hero_bestsellers": "Our Bestsellers",
+    "hero_shop_now": "Shop Now",
+    "hero_alt": "Hero Image",
+    "latest_title_part1": "Latest",
+    "latest_title_part2": "Collections",
+    "latest_subtitle": "Discover our latest handmade chocolates, perfect for every sweet moment.",
+    "latest_error": "Failed to load latest products: {{message}}",
+    "explore_full_collection": "Explore the full collection",
+    "no_latest_products": "No products available currently.",
+    "visited_title_part1": "Visited",
+    "visited_title_part2": "Recently",
+    "visited_subtitle": "Explore products you've viewed recently.",
+    "policy": {
+      "handmade": "All our chocolates are beautifully handmade by our award-winning chocolatiers.",
+      "fresh": "Fresh from Notting Hill using natural ingredients",
+      "delicious": "Our sublime chocolates stay delicious for weeks",
+      "gift_message": "You can add a gift message for the lucky recipient at checkout - personalising your gift",
+      "packaging": "We beautifully package our orders with care, so they arrive safely in plastic free packaging"
+    }
+  },
+  "collection": {
+    "title_part1": "All",
+    "title_part2": "Collections"
+  },
+  "filters_categories": "Categories",
+  "product": {
+    "unnamed": "Unnamed Product",
+    "add_to_cart": "Add to cart",
+    "price_not_available": "Price not available",
+    "buy_now": "Buy Now",
+    "add_to_favorites": "Add to favorites",
+    "favorite_added": "Added to favorites",
+    "cannot_add_no_data": "Cannot add product to cart: product data unavailable"
+  },
+  "about": {
+    "title_part1": "About",
+    "title_part2": "Us",
+    "description": "We are Luna Helthy, a small artisanal chocolate maker dedicated to crafting the finest handmade chocolates using natural ingredients. Our team takes pride in quality and presentation.",
+    "contact_button": "Contact Us"
+  },
+  "footer": {
+    "about_short": "Handmade chocolates crafted with care.",
+    "company": "Company",
+    "policy": "Policy",
+    "get_in_touch": "Get In Touch",
+    "phone_label": "Phone Number",
+    "whatsapp_label": "Whatsapp Number",
+    "email_label": "Email"
+  },
+  "contact": {
+    "title_part1": "Contact",
+    "title_part2": "Us",
+    "description": "We'd love to hear from you! Whether you have questions, feedback, or need assistance, our team is here to help.",
+    "backend_missing": "Error: backend URL is not configured. Check your application settings.",
+    "sent_success": "Message sent successfully!",
+    "failed": "Failed to send the message. Please try again.",
+    "failed_with_reason": "Failed to send the message: {{message}}",
+    "send_error": "An error occurred while sending. Check your network or backend URL.",
+    "form": {
+      "name_label": "Your Name",
+      "name_placeholder": "Enter your name",
+      "qty": "Qty",
+      "unit_price": "Unit price:",
+      "email_label": "Your Email",
+      "email_placeholder": "Enter your email",
+      "message_label": "Your Message",
+      "message_placeholder": "Enter your message",
+      "submit": "Send Message"
+    }
+  },
+  "orders": {
+    "title": "My Orders",
+    "loading": "Loading orders...",
+    "login_required": "Please sign in to view your orders.",
+    "no_token": "Login token not found.",
+    "fetch_failed": "Failed to fetch orders",
+    "fetch_error": "An error occurred while fetching orders.",
+    "fetch_error_with_reason": "Error fetching orders: {{message}}",
+    "unknown_error": "Unknown error",
+    "auth_expired": "Your session has expired or is invalid. Please sign in again.",
+    "login": "Sign In",
+    "no_orders": "No orders yet",
+    "price_label": "Price:",
+    "quantity_label": "Quantity:",
+    "order_date_label": "Order Date:",
+    "track_button": "Track Order",
+    "status_toast": "Order status: {{status}}"
+  },
+  "placeOrder": {
+    "title": { "part1": "Delivery", "part2": "Information" },
+    "sections": {
+      "customer_info": "Customer Details",
+      "order_type": "Order Type",
+      "recipient_info": "Recipient Details",
+      "delivery_address": "Delivery Address"
+    },
+    "fields": {
+      "first_name": {
+        "label": "First Name",
+        "placeholder": "Enter first name"
+      },
+      "last_name": { "label": "Last Name", "placeholder": "Enter last name" },
+      "phone": { "label": "Phone", "placeholder": "e.g. +201234567890" },
+      "email": { "label": "Email", "placeholder": "Enter email" },
+      "recipient_name": {
+        "label": "Recipient Name",
+        "placeholder": "Recipient name"
+      },
+      "recipient_phone": {
+        "label": "Recipient Phone",
+        "placeholder": "Recipient phone"
+      },
+      "city": { "label": "City", "placeholder": "Enter city" },
+      "state": {
+        "label": "State/Province",
+        "placeholder": "Enter state or governorate"
+      },
+      "address": {
+        "label": "Full Address",
+        "placeholder": "Enter full address"
+      },
+      "zipcode": { "label": "Postal Code", "placeholder": "Enter postal code" },
+      "country": { "label": "Country", "placeholder": "Enter country" }
+    },
+    "order_types": { "gift": "Gift", "regular": "Regular" },
+    "gift": { "wrapping_fee": "Gift wrapping: {{currency}} {{amount}}" },
+    "payment": {
+      "title": { "part1": "Payment", "part2": "Method" },
+      "methods": { "cod": "Cash on Delivery" }
+    },
+    "processing": "Processing...",
+    "proceed_to_payment": "Proceed to Payment",
+    "errors": {
+      "login_required": "Please log in first.",
+      "cart_empty": "Your cart is empty. Add products first.",
+      "session_expired": "Your session expired. Please log in again.",
+      "order_failed_with_reason": "Failed to complete order: {{message}}"
+    },
+    "success": { "order_created": "Order completed successfully!" },
+    "promo": {
+      "prompt": "Have a promo code?",
+      "placeholder": "Enter promo code",
+      "apply": "Apply",
+      "applied": "Promo applied: {{code}}",
+      "invalid": "Please enter a valid promo code"
+    },
+    "cart": {
+      "title": "Cart Summary",
+      "empty": "Cart is empty",
+      "subtotal": "Subtotal",
+      "shipping_fee": "Shipping Fee",
+      "total": "Total"
+    },
+    "actions": { "edit_cart": "Edit" }
+  },
+
+  "payment_finish": { "part1": "Payment", "part2": "Complete" },
+  "actions": { "back": "Back" },
+  "gift": { "label": "Gift wrapping fee" }
+}
