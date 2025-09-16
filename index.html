@@ -1,12 +1,24 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/Helthy/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Set persisted language and direction before React mounts to avoid layout flicker -->
+    <script>
+      (function () {
+        try {
+          var lang = localStorage.getItem("lang") || "ar";
+          document.documentElement.lang = lang;
+          document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+        } catch (e) {
+          /* ignore if localStorage isn't available */
+        }
+      })();
+    </script>
     <title>Ecommerce</title>
-    <script type="module" crossorigin src="/Helthy/assets/index-CQHY-i2Z.js"></script>
-    <link rel="stylesheet" crossorigin href="/Helthy/assets/index-Ll1_Gsd8.css">
+    <script type="module" crossorigin src="/Helthy/assets/index-CgldX44P.js"></script>
+    <link rel="stylesheet" crossorigin href="/Helthy/assets/index-Cdfbno1G.css">
   </head>
   <body>
     <div id="root"></div>
